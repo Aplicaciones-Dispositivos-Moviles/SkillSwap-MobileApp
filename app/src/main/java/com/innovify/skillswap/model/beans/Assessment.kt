@@ -22,6 +22,24 @@ data class SubmitAttemptRequest(
     var selectedAnswers: List<Int>
 )
 
+// PlanLimitReachedResource: el intento falló pero el plan del Estudiante ya agotó sus escalaciones del mes.
+data class PlanLimitReached(
+    var limit: String,
+    var plan: String,
+    var max: Int,
+    var current: Int,
+    var upgradeAvailable: Boolean
+)
+
+// FailedQuestionResource: pregunta fallada y lo que eligió el Estudiante. Hoy el backend solo la entrega al
+// Verificador; el campo failedQuestions del intento llega null hasta que el backend lo exponga al Estudiante.
+data class FailedQuestion(
+    var position: Int,
+    var question: String,
+    var answers: List<String>,
+    var selectedAnswer: Int
+)
+
 // AssessmentAttemptResource: resultado calificado del intento.
 data class AssessmentAttempt(
     var id: Int,
@@ -33,7 +51,9 @@ data class AssessmentAttempt(
     var completedAt: String?,
     var verificationCaseId: Int?,
     var verificationCaseStatus: String?,
-    var weakSubTopic: String?
+    var planLimitReached: PlanLimitReached?,
+    var weakSubTopic: String?,
+    var failedQuestions: List<FailedQuestion>?
 )
 
 // T50: respuestas guardadas en el teléfono. answers[i] = opción elegida en la pregunta i (-1 = sin responder).

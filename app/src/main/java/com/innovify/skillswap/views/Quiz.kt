@@ -41,6 +41,17 @@ fun Quiz(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController
     var loading by remember { mutableStateOf(true) }
     var sending by remember { mutableStateOf(false) }
 
+    // T53: apenas el quiz está calificado se pasa a la pantalla de resultado
+    // (también cuando el reenvío al reconectar lo califica con esta pantalla abierta)
+    LaunchedEffect(loading, viewModel.quizStatus, viewModel.attemptResult) {
+        val quiz = viewModel.blueprint
+        if (!loading && viewModel.quizStatus == "Sent" && viewModel.attemptResult != null &&
+            quiz != null && quiz.pathNodeId == node?.id
+        ) {
+            nav.navigate("QuizResult") { popUpTo("Quiz") { inclusive = true } }
+        }
+    }
+
     // Abre el quiz guardado o descarga uno nuevo (IA: puede tardar)
     LaunchedEffect(node?.id) {
         val nodeId = node?.id
@@ -136,18 +147,6 @@ fun Quiz(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController
                     text = "Respuestas guardadas en tu teléfono. Se enviarán cuando haya internet.",
                     modifier = Modifier.padding(top = 5.dp)
                 )
-            }
-
-            val result = viewModel.attemptResult
-            if (status == "Sent" && result != null) {
-                Text(
-                    text = "Resultado: ${result.score} de ${result.totalQuestions}",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(text = if (result.passed) "Aprobado" else "No aprobado")
-                result.weakSubTopic?.let {
-                    Text(text = "Por reforzar: $it", modifier = Modifier.padding(top = 5.dp))
-                }
             }
 
             if (viewModel.quizMessage.isNotEmpty()) {
