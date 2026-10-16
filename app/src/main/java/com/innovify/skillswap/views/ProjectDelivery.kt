@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,7 +13,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,10 +23,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
+import com.innovify.skillswap.ui.theme.Success
+import com.innovify.skillswap.ui.theme.SuccessContainer
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -96,8 +97,9 @@ fun ProjectDelivery(viewModel: SkillSwapViewModel, context: Context, nav: NavHos
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(vertical = 50.dp, horizontal = 20.dp)
+            .padding(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
+        ScreenTopBar(title = "Proyecto", onBack = { nav.popBackStack() })
         OfflineBanner(viewModel)
 
         val project = viewModel.project
@@ -110,59 +112,85 @@ fun ProjectDelivery(viewModel: SkillSwapViewModel, context: Context, nav: NavHos
             val timeLeft = remaining(project.dueAt)
             val expired = timeLeft == null && project.dueAt != null
 
-            Text(text = "Proyecto: ${project.skillName}", style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = project.skillName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+            )
             Text(
                 text = project.title,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = 10.dp)
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
             )
-            Text(text = project.statement, modifier = Modifier.padding(top = 10.dp))
+            Text(
+                text = project.statement,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(start = 8.dp, top = 12.dp)
+            )
 
             Text(
                 text = "Rúbrica de evaluación",
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = 20.dp, bottom = 5.dp)
+                modifier = Modifier.padding(start = 8.dp, top = 24.dp, bottom = 8.dp)
             )
             project.rubric.forEach { criterion ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp)
+                        .padding(start = 8.dp, bottom = 8.dp)
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text(text = "${criterion.name} (peso ${criterion.weight})", fontWeight = FontWeight.Bold)
-                        Text(text = criterion.description)
+                        Text(
+                            text = "${criterion.name} (peso ${criterion.weight})",
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Text(text = criterion.description, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
-            Text(text = "Nota mínima para aprobar: ${project.passingScore} / 100")
+            Text(
+                text = "Nota mínima para aprobar: ${project.passingScore} / 100",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+            )
             Text(
                 text = "Plazo: ${localDate(project.dueAt)}" + (timeLeft?.let { " ($it)" } ?: ""),
-                modifier = Modifier.padding(top = 5.dp)
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
             )
 
             if (submission != null) {
                 // La entrega es única: se muestra lo entregado y no se puede volver a enviar
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                    colors = CardDefaults.cardColors(containerColor = SuccessContainer),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 20.dp)
+                        .padding(start = 8.dp, top = 24.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Entregado, en evaluación", fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "Entregado, en evaluación",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Success
+                        )
                         Text(text = submission.repositoryUrl, modifier = Modifier.padding(top = 5.dp))
                         Text(text = "Entregado el ${localDate(submission.submittedAt)}")
                     }
                 }
             } else if (expired) {
-                Text(text = "El plazo de este proyecto venció.", modifier = Modifier.padding(top = 20.dp))
+                Text(
+                    text = "El plazo de este proyecto venció.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp, top = 24.dp)
+                )
                 Button(
                     enabled = viewModel.connectivity.isOnline,
                     onClick = { open(true) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 10.dp)
+                        .padding(start = 8.dp, top = 12.dp)
+                        .height(52.dp)
                 ) {
                     Text(
                         text = if (viewModel.connectivity.isOnline) "Generar un proyecto nuevo"
@@ -177,7 +205,7 @@ fun ProjectDelivery(viewModel: SkillSwapViewModel, context: Context, nav: NavHos
                     enabled = !sending,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 20.dp),
+                        .padding(start = 8.dp, top = 24.dp),
                     onValueChange = { repositoryUrl = it }
                 )
                 Button(
@@ -207,7 +235,8 @@ fun ProjectDelivery(viewModel: SkillSwapViewModel, context: Context, nav: NavHos
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 10.dp)
+                        .padding(start = 8.dp, top = 12.dp)
+                        .height(52.dp)
                 ) {
                     Text(
                         text = when {
@@ -220,14 +249,6 @@ fun ProjectDelivery(viewModel: SkillSwapViewModel, context: Context, nav: NavHos
             }
         }
 
-        OutlinedButton(
-            onClick = { nav.popBackStack() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp)
-        ) {
-            Text(text = "Volver al nodo")
-        }
     }
 
 }

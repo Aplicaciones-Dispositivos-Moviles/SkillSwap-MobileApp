@@ -2,18 +2,23 @@ package com.innovify.skillswap.views
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,10 +29,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
+import com.innovify.skillswap.ui.theme.NeutralBorder
+import com.innovify.skillswap.ui.theme.SkillBlue
+import com.innovify.skillswap.ui.theme.SkillBlueContainer
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -72,8 +79,9 @@ fun Quiz(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(vertical = 50.dp, horizontal = 20.dp)
+            .padding(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
+        ScreenTopBar(title = "Quiz", onBack = { nav.popBackStack() })
         OfflineBanner(viewModel)
 
         val quiz = viewModel.blueprint
@@ -86,20 +94,52 @@ fun Quiz(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController
             val editable = status == "Draft" && !sending
             val answered = viewModel.answers.count { it >= 0 }
 
-            Text(text = "Quiz: ${quiz.skillName}", style = MaterialTheme.typography.headlineSmall)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp, top = 8.dp)
+            ) {
+                Text(
+                    text = quiz.skillName,
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.weight(1f)
+                )
+                if (status == "Draft") StatusChip(text = "Guardado")
+            }
             Text(
                 text = "Respondidas $answered de ${quiz.questions.size}",
-                modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 8.dp)
+            )
+            LinearProgressIndicator(
+                progress = { if (quiz.questions.isEmpty()) 0f else answered.toFloat() / quiz.questions.size },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp, bottom = 16.dp)
+                    .height(8.dp)
             )
 
             quiz.questions.forEachIndexed { position, question ->
                 Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, NeutralBorder),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 10.dp)
+                        .padding(start = 8.dp, bottom = 12.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "${position + 1}. ${question.question}", fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "PREGUNTA ${position + 1} DE ${quiz.questions.size}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = question.question,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+                        )
                         question.answers.forEachIndexed { option, text ->
                             val selected = viewModel.answers.getOrNull(position) == option
                             Row(
@@ -116,10 +156,23 @@ fun Quiz(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController
                                             }
                                         }
                                     )
-                                    .padding(vertical = 6.dp)
+                                    .padding(vertical = 4.dp)
+                                    .background(
+                                        if (selected) SkillBlueContainer else MaterialTheme.colorScheme.surface,
+                                        MaterialTheme.shapes.small
+                                    )
+                                    .border(
+                                        1.dp, if (selected) SkillBlue else NeutralBorder,
+                                        MaterialTheme.shapes.small
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 8.dp)
                             ) {
                                 RadioButton(selected = selected, enabled = editable, onClick = null)
-                                Text(text = text, modifier = Modifier.padding(start = 8.dp))
+                                Text(
+                                    text = "${'A' + option}. $text",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
                             }
                         }
                     }
@@ -136,7 +189,10 @@ fun Quiz(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController
                             withContext(Dispatchers.Main) { sending = false }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp)
+                        .height(52.dp)
                 ) {
                     Text(text = if (sending) "Enviando…" else "Enviar respuestas")
                 }
@@ -145,23 +201,20 @@ fun Quiz(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController
             if (status == "Pending") {
                 Text(
                     text = "Respuestas guardadas en tu teléfono. Se enviarán cuando haya internet.",
-                    modifier = Modifier.padding(top = 5.dp)
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp, top = 8.dp)
                 )
             }
 
             if (viewModel.quizMessage.isNotEmpty()) {
-                Text(text = viewModel.quizMessage, modifier = Modifier.padding(top = 10.dp))
+                Text(
+                    text = viewModel.quizMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp, top = 12.dp)
+                )
             }
         }
 
-        OutlinedButton(
-            onClick = { nav.popBackStack() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp)
-        ) {
-            Text(text = "Volver al nodo")
-        }
     }
 
 }

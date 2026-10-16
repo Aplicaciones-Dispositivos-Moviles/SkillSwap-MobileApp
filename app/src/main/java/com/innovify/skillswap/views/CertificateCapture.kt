@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -117,13 +118,15 @@ fun CertificateCapture(viewModel: SkillSwapViewModel, context: Context, nav: Nav
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(vertical = 50.dp, horizontal = 20.dp)
+            .padding(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
+        ScreenTopBar(title = "Subir certificado", onBack = { nav.popBackStack() })
         OfflineBanner(viewModel)
-        Text(text = "Subir certificado", style = MaterialTheme.typography.headlineSmall)
         Text(
             text = "Habilidad: ${node?.skillName ?: "—"}",
-            modifier = Modifier.padding(top = 5.dp, bottom = 15.dp)
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 8.dp, top = 8.dp, bottom = 16.dp)
         )
 
         Button(
@@ -134,7 +137,10 @@ fun CertificateCapture(viewModel: SkillSwapViewModel, context: Context, nav: Nav
                 ) == PackageManager.PERMISSION_GRANTED
                 if (granted) openCamera() else permissionLauncher.launch(Manifest.permission.CAMERA)
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp)
+                .height(52.dp)
         ) {
             Text(text = if (photoUri == null) "Tomar foto del certificado" else "Tomar otra foto")
         }
@@ -144,7 +150,8 @@ fun CertificateCapture(viewModel: SkillSwapViewModel, context: Context, nav: Nav
             onClick = { pickFile.launch(arrayOf("application/pdf", "image/jpeg", "image/png")) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp)
+                .padding(start = 8.dp, top = 12.dp)
+                .height(52.dp)
         ) {
             Text(text = "Elegir archivo (PDF o imagen)")
         }
@@ -157,25 +164,38 @@ fun CertificateCapture(viewModel: SkillSwapViewModel, context: Context, nav: Nav
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(220.dp)
-                    .padding(top = 15.dp)
+                    .padding(start = 8.dp, top = 16.dp)
             )
         }
 
         if (reading) {
-            Text(text = "Leyendo el certificado…", modifier = Modifier.padding(top = 15.dp))
+            Text(
+                text = "Verificando tu certificado",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(start = 8.dp, top = 16.dp)
+            )
+            Text(
+                text = "Lo leemos en tu dispositivo con ML Kit. Toma unos segundos.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 8.dp)
+            )
         }
 
         val uri = photoUri
         if (uri != null && !reading) {
             Text(
                 text = "Revisa los datos leídos y corrígelos si hace falta",
-                modifier = Modifier.padding(top = 15.dp, bottom = 5.dp)
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(start = 8.dp, top = 16.dp, bottom = 8.dp)
             )
 
             OutlinedTextField(
                 value = institution,
                 label = { Text(text = "Institución") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp),
                 onValueChange = { institution = it }
             )
             OutlinedTextField(
@@ -183,7 +203,7 @@ fun CertificateCapture(viewModel: SkillSwapViewModel, context: Context, nav: Nav
                 label = { Text(text = "Curso") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 10.dp),
+                    .padding(start = 8.dp, top = 12.dp),
                 onValueChange = { course = it }
             )
             OutlinedTextField(
@@ -192,7 +212,7 @@ fun CertificateCapture(viewModel: SkillSwapViewModel, context: Context, nav: Nav
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 10.dp),
+                    .padding(start = 8.dp, top = 12.dp),
                 onValueChange = { issueDate = it }
             )
 
@@ -252,23 +272,25 @@ fun CertificateCapture(viewModel: SkillSwapViewModel, context: Context, nav: Nav
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 20.dp)
+                    .padding(start = 8.dp, top = 24.dp)
+                    .height(52.dp)
             ) {
                 Text(text = if (sending) "Enviando…" else "Enviar certificado")
             }
         }
 
         if (resultText.isNotEmpty()) {
-            Text(text = resultText, modifier = Modifier.padding(top = 15.dp))
-        }
-
-        OutlinedButton(
-            onClick = { nav.popBackStack() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp)
-        ) {
-            Text(text = "Volver al nodo")
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp, top = 16.dp)
+            ) {
+                Text(
+                    text = resultText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
         }
     }
 
