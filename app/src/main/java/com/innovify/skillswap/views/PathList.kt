@@ -34,10 +34,11 @@ fun PathList(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContro
 
     var loading by remember { mutableStateOf(true) }
 
-    // Carga la ruta UNA vez al entrar a la pantalla
-    LaunchedEffect(Unit) {
+    // Carga la ruta al entrar y otra vez cada vez que cambia la conexión (T49):
+    // sin internet muestra lo guardado; al volver internet se actualiza sola.
+    LaunchedEffect(viewModel.connectivity.isOnline) {
         viewModel.viewModelScope.launch(Dispatchers.IO) {
-            val ok = viewModel.loadPath()
+            val ok = viewModel.loadPath(context)
             withContext(Dispatchers.Main) {
                 loading = false
                 if (!ok) {
@@ -53,6 +54,7 @@ fun PathList(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContro
             .padding(20.dp)
             .padding(vertical = 30.dp)
     ) {
+        OfflineBanner(viewModel)
         Text(text = "MI RUTA", style = MaterialTheme.typography.headlineSmall)
 
         val path = viewModel.path

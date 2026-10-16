@@ -119,6 +119,7 @@ fun CertificateCapture(viewModel: SkillSwapViewModel, context: Context, nav: Nav
             .verticalScroll(rememberScrollState())
             .padding(vertical = 50.dp, horizontal = 20.dp)
     ) {
+        OfflineBanner(viewModel)
         Text(text = "Subir certificado", style = MaterialTheme.typography.headlineSmall)
         Text(
             text = "Habilidad: ${node?.skillName ?: "—"}",
@@ -209,11 +210,24 @@ fun CertificateCapture(viewModel: SkillSwapViewModel, context: Context, nav: Nav
                         resultText = ""
                         // La red va en hilo IO (como en la plantilla del profe)
                         viewModel.viewModelScope.launch(Dispatchers.IO) {
-                            val uploaded = viewModel.uploadCertificate(
-                                context, uri, institution.trim(), course.trim(), issueDate.trim(), ocrText
+                            // T48: primero se guarda una copia en el teléfono, haya internet o no
+                            val localId = viewModel.saveEvidence(
+                                context, uri, node?.id ?: 0,
+                                institution.trim(), course.trim(), issueDate.trim(), ocrText
                             )
-                            val message = if (!uploaded) {
+                            val uploaded = localId >= 0 && viewModel.connectivity.isOnline &&
+                                viewModel.uploadCertificate(
+                                    context, uri, institution.trim(), course.trim(), issueDate.trim(),
+                                    ocrText, localId
+                                )
+                            val message = if (localId < 0) {
                                 viewModel.errorMessage
+                            } else if (!viewModel.connectivity.isOnline) {
+                                // T49: sin internet el certificado queda pendiente (el reenvío es T51)
+                                "Sin conexión.\nEl certificado quedó guardado en tu teléfono " +
+                                    "y se enviará cuando vuelva internet."
+                            } else if (!uploaded) {
+                                viewModel.errorMessage + "\nEl certificado quedó guardado en tu teléfono."
                             } else {
                                 val cert = viewModel.certificate
                                 val summary = "Certificado registrado.\nEstado: ${cert?.status}" +
