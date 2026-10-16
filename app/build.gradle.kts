@@ -46,6 +46,9 @@ dependencies {
     // Íconos (Icons.Filled.*). La versión la pone el BOM
     implementation("androidx.compose.material:material-icons-core")
 
+    // OCR on-device (ML Kit, modelo de texto latino incluido en la app)
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

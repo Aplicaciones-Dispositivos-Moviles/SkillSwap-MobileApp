@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -41,6 +42,18 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
             Text(
                 text = "Certificado: " + (node.linkedCertificateId?.let { "#$it" } ?: "sin certificado")
             )
+        }
+
+        // T44: solo un nodo disponible y sin certificado puede recibir uno
+        if (node != null && node.status == "Available" && node.linkedCertificateId == null) {
+            Button(
+                onClick = { nav.navigate("Certificate") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp)
+            ) {
+                Text(text = "Subir certificado")
+            }
         }
 
         OutlinedButton(

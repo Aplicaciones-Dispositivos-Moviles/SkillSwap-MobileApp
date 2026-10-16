@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.views.CertificateCapture
 import com.innovify.skillswap.views.Login
 import com.innovify.skillswap.views.NodeDetail
 import com.innovify.skillswap.views.PathList
@@ -21,6 +22,7 @@ fun NavSkillSwap(viewModel: SkillSwapViewModel, context: Context) {
         composable("Login") { Login(viewModel, context, recordarPantalla) }
         composable("Path") { PathList(viewModel, context, recordarPantalla) }
         composable("Node") { NodeDetail(viewModel, context, recordarPantalla) }
+        composable("Certificate") { CertificateCapture(viewModel, context, recordarPantalla) }
 
     }
 
