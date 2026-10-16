@@ -13,6 +13,7 @@ import com.innovify.skillswap.views.CertificateCapture
 import com.innovify.skillswap.views.Login
 import com.innovify.skillswap.views.NodeDetail
 import com.innovify.skillswap.views.PathList
+import com.innovify.skillswap.views.ProjectDelivery
 import com.innovify.skillswap.views.Quiz
 import com.innovify.skillswap.views.QuizResult
 import kotlinx.coroutines.Dispatchers
@@ -48,6 +49,7 @@ fun NavSkillSwap(viewModel: SkillSwapViewModel, context: Context) {
         composable("Certificate") { CertificateCapture(viewModel, context, recordarPantalla) }
         composable("Quiz") { Quiz(viewModel, context, recordarPantalla) }
         composable("QuizResult") { QuizResult(viewModel, context, recordarPantalla) }
+        composable("Project") { ProjectDelivery(viewModel, context, recordarPantalla) }
 
     }
 

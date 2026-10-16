@@ -7,8 +7,11 @@ import com.innovify.skillswap.model.beans.Certificate
 import com.innovify.skillswap.model.beans.CertificateLink
 import com.innovify.skillswap.model.beans.LearningPath
 import com.innovify.skillswap.model.beans.LinkCertificateRequest
+import com.innovify.skillswap.model.beans.MiniProject
+import com.innovify.skillswap.model.beans.MiniProjectSubmission
 import com.innovify.skillswap.model.beans.SignInRequest
 import com.innovify.skillswap.model.beans.SubmitAttemptRequest
+import com.innovify.skillswap.model.beans.SubmitMiniProjectRequest
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -59,5 +62,25 @@ interface WebService {
     // 201 AssessmentAttempt | 400 | 403 | 404 | 409
     @POST("api/v1/assessment-attempts")
     suspend fun submitAttempt(@Body body: SubmitAttemptRequest): Response<AssessmentAttempt>
+
+    // Último proyecto del nodo. 200 MiniProject | 404 si todavía no tiene
+    @GET("api/v1/path-nodes/{nodeId}/mini-project")
+    suspend fun getMiniProject(@Path("nodeId") nodeId: Int): Response<MiniProject>
+
+    // Genera con IA el proyecto del nodo; si el último aún se puede entregar, lo devuelve (200) sin generar otro.
+    // 201 nuevo | 200 el vigente | 403 | 404 | 409 | 503 falló la IA
+    @POST("api/v1/path-nodes/{nodeId}/mini-project")
+    suspend fun generateMiniProject(
+        @Path("nodeId") nodeId: Int,
+        @Query("regenerate") regenerate: Boolean
+    ): Response<MiniProject>
+
+    // Entrega el enlace del repositorio. 201 MiniProjectSubmission | 400 enlace inválido | 403 | 404 |
+    // 409 plazo vencido, ya entregado, hay uno más nuevo o el nodo tiene un caso en curso
+    @POST("api/v1/mini-projects/{miniProjectId}/submissions")
+    suspend fun submitMiniProject(
+        @Path("miniProjectId") miniProjectId: Int,
+        @Body body: SubmitMiniProjectRequest
+    ): Response<MiniProjectSubmission>
 
 }
