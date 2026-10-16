@@ -77,6 +77,18 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
             }
         }
 
+        // T50: el quiz se rinde cuando el nodo está disponible y ya tiene su certificado vinculado
+        if (node != null && node.status == "Available" && node.linkedCertificateId != null) {
+            Button(
+                onClick = { nav.navigate("Quiz") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp)
+            ) {
+                Text(text = "Rendir quiz")
+            }
+        }
+
         OutlinedButton(
             onClick = { nav.popBackStack() },
             modifier = Modifier

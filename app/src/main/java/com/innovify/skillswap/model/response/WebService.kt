@@ -1,11 +1,14 @@
 package com.innovify.skillswap.model.response
 
+import com.innovify.skillswap.model.beans.AssessmentAttempt
+import com.innovify.skillswap.model.beans.AssessmentBlueprint
 import com.innovify.skillswap.model.beans.AuthUser
 import com.innovify.skillswap.model.beans.Certificate
 import com.innovify.skillswap.model.beans.CertificateLink
 import com.innovify.skillswap.model.beans.LearningPath
 import com.innovify.skillswap.model.beans.LinkCertificateRequest
 import com.innovify.skillswap.model.beans.SignInRequest
+import com.innovify.skillswap.model.beans.SubmitAttemptRequest
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -46,5 +49,15 @@ interface WebService {
         @Path("nodeId") nodeId: Int,
         @Body body: LinkCertificateRequest
     ): Response<CertificateLink>
+
+    // Genera con IA el quiz del nodo (sin respuestas correctas). Cada llamada crea uno nuevo.
+    // 201 AssessmentBlueprint | 403 | 404 | 409 nodo bloqueado o completado | 503 falló la IA
+    @POST("api/v1/path-nodes/{nodeId}/assessment-blueprint")
+    suspend fun generateBlueprint(@Path("nodeId") nodeId: Int): Response<AssessmentBlueprint>
+
+    // Envía las respuestas y recibe la calificación.
+    // 201 AssessmentAttempt | 400 | 403 | 404 | 409
+    @POST("api/v1/assessment-attempts")
+    suspend fun submitAttempt(@Body body: SubmitAttemptRequest): Response<AssessmentAttempt>
 
 }

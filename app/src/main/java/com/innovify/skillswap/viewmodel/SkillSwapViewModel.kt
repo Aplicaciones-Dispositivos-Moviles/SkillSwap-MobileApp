@@ -8,6 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.innovify.skillswap.model.beans.ApiError
+import com.innovify.skillswap.model.beans.AssessmentAttempt
+import com.innovify.skillswap.model.beans.AssessmentBlueprint
 import com.innovify.skillswap.model.beans.AuthUser
 import com.innovify.skillswap.model.beans.Certificate
 import com.innovify.skillswap.model.beans.CertificateLink
@@ -15,7 +17,9 @@ import com.innovify.skillswap.model.beans.LearningPath
 import com.innovify.skillswap.model.beans.LocalCertificate
 import com.innovify.skillswap.model.beans.LinkCertificateRequest
 import com.innovify.skillswap.model.beans.PathNode
+import com.innovify.skillswap.model.beans.QuizProgress
 import com.innovify.skillswap.model.beans.SignInRequest
+import com.innovify.skillswap.model.beans.SubmitAttemptRequest
 import com.innovify.skillswap.model.client.RetrofitClient
 import com.innovify.skillswap.model.db.SkillSwapDbHelper
 import okhttp3.MediaType
@@ -192,6 +196,153 @@ class SkillSwapViewModel : ViewModel() {
             errorMessage = "No se pudo guardar el certificado en el teléfono"
             -1
         }
+    }
+
+    // ------------------------------------------------------------ QUIZ (T50 + T51)
+    // Quiz abierto, respuestas elegidas (-1 = sin responder) y su estado: Draft | Pending | Sent
+    var blueprint: AssessmentBlueprint? by mutableStateOf(null)
+    var answers: List<Int> by mutableStateOf(emptyList())
+    var quizStatus: String by mutableStateOf("Draft")
+    var attemptResult: AssessmentAttempt? by mutableStateOf(null)
+    var quizMessage: String by mutableStateOf("")
+
+    private fun showQuiz(quiz: AssessmentBlueprint, progress: QuizProgress?) {
+        val saved = progress?.answers
+        blueprint = quiz
+        answers = if (saved != null && saved.size == quiz.questions.size) saved
+        else List(quiz.questions.size) { -1 }
+        quizStatus = progress?.status ?: "Draft"
+        attemptResult = progress?.resultJson?.let {
+            try {
+                Gson().fromJson(it, AssessmentAttempt::class.java)
+            } catch (e: Exception) {
+                null
+            }
+        }
+        quizMessage = ""
+    }
+
+    // Abre el quiz del nodo. Reutiliza el guardado mientras no se haya calificado; si no hay ninguno
+    // (o el anterior ya se calificó) pide uno nuevo al backend, lo cual requiere internet.
+    suspend fun openQuiz(context: Context, nodeId: Int): Boolean {
+        val db = db(context)
+        val local = try {
+            db.findBlueprint(nodeId)
+        } catch (e: Exception) {
+            null
+        }
+        val progress = local?.let {
+            try {
+                db.findProgress(it.id)
+            } catch (e: Exception) {
+                null
+            }
+        }
+        if (local != null && progress?.status != "Sent") {
+            showQuiz(local, progress)
+            return true
+        }
+        if (!connectivity.isOnline) {
+            if (local != null && progress != null) {
+                showQuiz(local, progress) // sin internet se muestra el último resultado guardado
+                return true
+            }
+            errorMessage = "Necesitas internet para descargar el quiz la primera vez"
+            return false
+        }
+        return try {
+            val response = RetrofitClient.webService.generateBlueprint(nodeId)
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                db.saveBlueprint(body, nodeId)
+                showQuiz(body, db.findProgress(body.id))
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    503 -> "El servicio de IA no pudo generar el quiz. Intenta de nuevo en un momento"
+                    else -> messageFrom(response, "No se pudo generar el quiz (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo generar el quiz. Revisa tu conexión"
+            false
+        }
+    }
+
+    // T50: cada opción elegida se guarda al instante en SQLite (sobrevive si se cierra la app).
+    fun selectAnswer(context: Context, position: Int, option: Int) {
+        val quiz = blueprint ?: return
+        if (quizStatus != "Draft" || position !in answers.indices) return
+        answers = answers.toMutableList().also { it[position] = option }
+        try {
+            db(context).saveProgress(quiz.id, quiz.pathNodeId, answers, "Draft")
+        } catch (e: Exception) {
+            // la respuesta sigue en pantalla; se guardará con la siguiente
+        }
+    }
+
+    // Envía el quiz. Sin internet queda "Pending" en SQLite y resendPending lo manda al reconectar (T51).
+    suspend fun submitQuiz(context: Context) {
+        val quiz = blueprint ?: return
+        if (quizStatus != "Draft" || answers.any { it < 0 }) return
+        try {
+            db(context).saveProgress(quiz.id, quiz.pathNodeId, answers, "Pending")
+        } catch (e: Exception) {
+            quizMessage = "No se pudieron guardar tus respuestas en el teléfono"
+            return
+        }
+        quizStatus = "Pending"
+        if (!connectivity.isOnline) {
+            quizMessage = "Sin conexión.\nTus respuestas quedaron guardadas y se enviarán cuando vuelva internet."
+            return
+        }
+        val sent = sendAttempt(context, QuizProgress(quiz.id, quiz.pathNodeId, answers, "Pending", null))
+        quizMessage = if (sent != null) ""
+        else errorMessage + "\nTus respuestas siguen guardadas y se reenviarán al reconectar."
+    }
+
+    // POST api/v1/assessment-attempts. Devuelve el resultado, o null si no se pudo (queda "Pending").
+    private suspend fun sendAttempt(context: Context, progress: QuizProgress): AssessmentAttempt? {
+        return try {
+            val response = RetrofitClient.webService.submitAttempt(
+                SubmitAttemptRequest(progress.blueprintId, progress.answers)
+            )
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                try {
+                    db(context).markAttemptSent(progress.blueprintId, Gson().toJson(body))
+                } catch (e: Exception) {
+                }
+                if (blueprint?.id == progress.blueprintId) {
+                    attemptResult = body
+                    quizStatus = "Sent"
+                    quizMessage = ""
+                }
+                body
+            } else {
+                errorMessage = messageFrom(response, "No se pudo enviar el quiz (${response.code()})")
+                null
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo enviar el quiz. Revisa tu conexión"
+            null
+        }
+    }
+
+    // T51: reenvía los quiz que quedaron "Pending". Devuelve cuántos se calificaron.
+    suspend fun resendPending(context: Context): Int {
+        val pending = try {
+            db(context).pendingAttempts()
+        } catch (e: Exception) {
+            emptyList()
+        }
+        var sent = 0
+        for (progress in pending) {
+            if (!connectivity.isOnline) break
+            if (sendAttempt(context, progress) != null) sent++
+        }
+        return sent
     }
 
     // Texto del error del backend (ProblemDetail.detail) o uno por defecto.
