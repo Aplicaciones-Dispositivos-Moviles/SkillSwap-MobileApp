@@ -89,6 +89,18 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
             }
         }
 
+        // T55: el proyecto se puede abrir con el nodo disponible (el backend decide si corresponde)
+        if (node != null && node.status == "Available") {
+            OutlinedButton(
+                onClick = { nav.navigate("Project") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+            ) {
+                Text(text = "Proyecto")
+            }
+        }
+
         OutlinedButton(
             onClick = { nav.popBackStack() },
             modifier = Modifier

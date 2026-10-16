@@ -15,11 +15,14 @@ import com.innovify.skillswap.model.beans.Certificate
 import com.innovify.skillswap.model.beans.CertificateLink
 import com.innovify.skillswap.model.beans.LearningPath
 import com.innovify.skillswap.model.beans.LocalCertificate
+import com.innovify.skillswap.model.beans.MiniProject
+import com.innovify.skillswap.model.beans.MiniProjectSubmission
 import com.innovify.skillswap.model.beans.LinkCertificateRequest
 import com.innovify.skillswap.model.beans.PathNode
 import com.innovify.skillswap.model.beans.QuizProgress
 import com.innovify.skillswap.model.beans.SignInRequest
 import com.innovify.skillswap.model.beans.SubmitAttemptRequest
+import com.innovify.skillswap.model.beans.SubmitMiniProjectRequest
 import com.innovify.skillswap.model.client.RetrofitClient
 import com.innovify.skillswap.model.db.SkillSwapDbHelper
 import okhttp3.MediaType
@@ -343,6 +346,94 @@ class SkillSwapViewModel : ViewModel() {
             if (sendAttempt(context, progress) != null) sent++
         }
         return sent
+    }
+
+    // ------------------------------------------------------------ PROYECTO (T55)
+    // Proyecto abierto del nodo y su entrega (null mientras no se haya entregado)
+    var project: MiniProject? by mutableStateOf(null)
+    var projectSubmission: MiniProjectSubmission? by mutableStateOf(null)
+
+    private fun showProject(value: MiniProject, submission: MiniProjectSubmission?) {
+        project = value
+        projectSubmission = submission
+    }
+
+    // Abre el proyecto del nodo. Con internet pregunta al backend (y genera uno con IA si todavía no hay, o
+    // si forceNew=true porque el anterior venció); sin internet muestra el último guardado en SQLite.
+    suspend fun openProject(context: Context, nodeId: Int, forceNew: Boolean = false): Boolean {
+        val db = db(context)
+        if (!connectivity.isOnline) {
+            val cached = try {
+                db.findMiniProject(nodeId)
+            } catch (e: Exception) {
+                null
+            }
+            return if (cached != null) {
+                showProject(cached, try { db.findSubmission(nodeId) } catch (e: Exception) { null })
+                true
+            } else {
+                errorMessage = "Necesitas internet para ver el proyecto la primera vez"
+                false
+            }
+        }
+        return try {
+            val latest = if (forceNew) null else RetrofitClient.webService.getMiniProject(nodeId)
+            val response = if (latest == null || latest.code() == 404) {
+                RetrofitClient.webService.generateMiniProject(nodeId, false)
+            } else {
+                latest
+            }
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                try {
+                    db.saveMiniProject(body)
+                } catch (e: Exception) {
+                }
+                showProject(body, try { db.findSubmission(nodeId) } catch (e: Exception) { null })
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    503 -> "El servicio de IA no pudo generar el proyecto. Intenta de nuevo en un momento"
+                    else -> messageFrom(response, "No se pudo abrir el proyecto (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo abrir el proyecto. Revisa tu conexión"
+            false
+        }
+    }
+
+    // Entrega el enlace del repositorio. Solo se entrega una vez y requiere internet. true si el backend lo recibió.
+    suspend fun submitProject(context: Context, repositoryUrl: String): Boolean {
+        val current = project ?: return false
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para entregar el proyecto"
+            return false
+        }
+        return try {
+            val response = RetrofitClient.webService.submitMiniProject(
+                current.id, SubmitMiniProjectRequest(repositoryUrl)
+            )
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                try {
+                    db(context).saveSubmission(current.pathNodeId, body)
+                } catch (e: Exception) {
+                }
+                projectSubmission = body
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    400 -> messageFrom(response, "El enlace del repositorio no es válido")
+                    else -> messageFrom(response, "No se pudo entregar el proyecto (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo entregar el proyecto. Revisa tu conexión"
+            false
+        }
     }
 
     // Texto del error del backend (ProblemDetail.detail) o uno por defecto.
