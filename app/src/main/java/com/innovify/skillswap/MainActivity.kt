@@ -15,6 +15,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val viewModel by viewModels<SkillSwapViewModel>()
+        viewModel.restoreSession(applicationContext) // recupera la sesión guardada, si hay
         viewModel.connectivity.start(applicationContext) // T49: observa la conexión mientras la app vive
 
         setContent {

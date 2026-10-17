@@ -24,6 +24,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -76,11 +77,21 @@ fun PathList(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContro
     ) {
         item {
             OfflineBanner(viewModel)
-            Text(
-                text = "Hola, ${viewModel.user?.username ?: ""}",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
+                Text(
+                    text = "Hola, ${viewModel.user?.username ?: ""}",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.weight(1f)
+                )
+                TextButton(onClick = { viewModel.signOut(context) }) {
+                    Text(text = "Salir")
+                }
+            }
         }
 
         if (loading) {
