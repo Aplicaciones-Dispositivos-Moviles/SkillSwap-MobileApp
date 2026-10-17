@@ -46,7 +46,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun Login(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
 
-    var username by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf(viewModel.registeredUsername) }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
@@ -165,6 +165,13 @@ fun Login(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControlle
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 12.dp)
             )
+        }
+        TextButton(
+            enabled = !loading,
+            onClick = { nav.navigate("Register") },
+            modifier = Modifier.padding(top = 16.dp)
+        ) {
+            Text(text = "¿No tienes cuenta? Crear cuenta", style = MaterialTheme.typography.labelLarge)
         }
     }
 

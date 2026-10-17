@@ -8,6 +8,22 @@ data class SignInRequest(
     var password: String
 )
 
+// Body de POST api/v1/authentication/sign-up (el correo debe ser institucional .edu.pe)
+data class SignUpRequest(
+    var username: String,
+    var email: String,
+    var password: String
+)
+
+// UserResource: respuesta de sign-up (la cuenta queda sin verificar hasta confirmar el correo)
+data class UserResource(
+    var id: Int,
+    var username: String,
+    var email: String,
+    var role: String,
+    @SerializedName("isVerified") var isVerified: Boolean
+)
+
 // Respuesta de sign-in (AuthenticatedUserResource del backend)
 data class AuthUser(
     var id: Int,

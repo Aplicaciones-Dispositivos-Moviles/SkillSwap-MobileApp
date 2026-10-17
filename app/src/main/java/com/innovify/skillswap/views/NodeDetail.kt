@@ -1,6 +1,7 @@
 package com.innovify.skillswap.views
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,6 +42,7 @@ import com.innovify.skillswap.ui.theme.TextSecondary
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 // Mock-up 08 · Detalle del nodo
@@ -54,6 +60,7 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
     }
 
     val total = viewModel.path?.nodes?.size ?: 0
+    var enabling by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -166,6 +173,34 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
                                 .height(52.dp)
                         ) {
                             Text(text = "Proyecto")
+                        }
+                    }
+
+                    // WF-10: con el nodo completado el Estudiante puede habilitarse como Verificador de esa habilidad
+                    if (node.status == "Completed") {
+                        OutlinedButton(
+                            enabled = !enabling && viewModel.connectivity.isOnline,
+                            onClick = {
+                                enabling = true
+                                viewModel.viewModelScope.launch(Dispatchers.IO) {
+                                    val message = viewModel.enableAsVerifier(node.skillTag)
+                                    withContext(Dispatchers.Main) {
+                                        enabling = false
+                                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                        ) {
+                            Text(
+                                text = when {
+                                    enabling -> "Habilitando…"
+                                    !viewModel.connectivity.isOnline -> "Necesitas internet para habilitarte"
+                                    else -> "Habilitarme como Verificador"
+                                }
+                            )
                         }
                     }
                 }
