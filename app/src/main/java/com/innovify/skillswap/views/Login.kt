@@ -134,7 +134,7 @@ fun Login(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControlle
                     loading = true
                     // La red va en hilo IO (como en la plantilla del profe)
                     viewModel.viewModelScope.launch(Dispatchers.IO) {
-                        val ok = viewModel.signIn(username.trim(), password)
+                        val ok = viewModel.signIn(username.trim(), password, context)
                         // Toast y navegación necesitan el hilo principal
                         withContext(Dispatchers.Main) {
                             loading = false

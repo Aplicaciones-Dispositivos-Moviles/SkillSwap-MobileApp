@@ -59,6 +59,43 @@ class SkillSwapViewModel : ViewModel() {
     // la vista lo muestra con withContext(Dispatchers.Main).
     var errorMessage: String = ""
 
+    // Sesión guardada en el teléfono (SharedPreferences) para no pedir el login al reabrir la app.
+    private fun sessionPrefs(context: Context) =
+        context.applicationContext.getSharedPreferences("skillswap_session", Context.MODE_PRIVATE)
+
+    // Se llama al abrir la app (MainActivity): recupera el usuario y el token guardados, si hay.
+    fun restoreSession(context: Context) {
+        if (user != null) return // la app ya estaba abierta (por ejemplo, tras girar la pantalla)
+        val raw = sessionPrefs(context).getString("user", null) ?: return
+        try {
+            val saved = Gson().fromJson(raw, AuthUser::class.java)
+            if (saved != null && saved.token.isNotEmpty()) {
+                user = saved
+                RetrofitClient.token = saved.token
+            }
+        } catch (e: Exception) {
+            sessionPrefs(context).edit().remove("user").apply()
+        }
+    }
+
+    // Cierra la sesión: borra lo guardado y limpia lo que se ve en pantalla.
+    // La copia local de la ruta (SQLite) se conserva para cuando vuelva a entrar.
+    fun signOut(context: Context) {
+        sessionPrefs(context).edit().remove("user").apply()
+        RetrofitClient.token = null
+        user = null
+        path = null
+        selectedNode = null
+        certificate = null
+        certificateLink = null
+        localCertificate = null
+        blueprint = null
+        attemptResult = null
+        project = null
+        projectSubmission = null
+        quizMessage = ""
+    }
+
     // suspend: la VISTA lo llama dentro de viewModelScope.launch(Dispatchers.IO).
     // Devuelve true si el login fue correcto.
     // Usuario recién registrado: el Login lo muestra ya escrito al volver del registro
@@ -103,13 +140,14 @@ class SkillSwapViewModel : ViewModel() {
         }
     }
 
-    suspend fun signIn(username: String, password: String): Boolean {
+    suspend fun signIn(username: String, password: String, context: Context): Boolean {
         return try {
             val response = RetrofitClient.webService.signIn(SignInRequest(username, password))
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 user = body
                 RetrofitClient.token = body.token
+                sessionPrefs(context).edit().putString("user", Gson().toJson(body)).apply()
                 true
             } else {
                 errorMessage = when (response.code()) {
@@ -150,6 +188,11 @@ class SkillSwapViewModel : ViewModel() {
                 } catch (e: Exception) {
                 }
                 true
+            } else if (response.code() == 401) {
+                // El token venció: se cierra la sesión y la app vuelve al Login
+                signOut(context)
+                errorMessage = "Tu sesión venció. Inicia sesión de nuevo"
+                false
             } else if (response.code() >= 500) {
                 loadPathFromCache(context, studentId, "No se pudo cargar la ruta (${response.code()})")
             } else {

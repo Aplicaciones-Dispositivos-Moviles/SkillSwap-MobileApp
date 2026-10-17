@@ -41,8 +41,19 @@ fun NavSkillSwap(viewModel: SkillSwapViewModel, context: Context) {
         }
     }
 
+    // Si la sesión se cierra (botón Salir o token vencido), se vuelve al Login y se limpia el historial
+    LaunchedEffect(viewModel.user) {
+        val route = recordarPantalla.currentDestination?.route
+        if (viewModel.user == null && route != null && route != "Login" && route != "Register") {
+            recordarPantalla.navigate("Login") { popUpTo(0) }
+        }
+    }
+
+    // Con una sesión guardada la app abre directo en la ruta
+    val start = if (viewModel.user != null) "Path" else "Login"
+
     // Cada nav.navigate("X") debe tener su composable("X") aquí.
-    NavHost(navController = recordarPantalla, startDestination = "Login") {
+    NavHost(navController = recordarPantalla, startDestination = start) {
 
         composable("Login") { Login(viewModel, context, recordarPantalla) }
         composable("Register") { Register(viewModel, context, recordarPantalla) }
