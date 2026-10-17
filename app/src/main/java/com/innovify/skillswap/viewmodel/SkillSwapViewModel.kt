@@ -11,6 +11,7 @@ import com.innovify.skillswap.model.beans.ApiError
 import com.innovify.skillswap.model.beans.AssessmentAttempt
 import com.innovify.skillswap.model.beans.AssessmentBlueprint
 import com.innovify.skillswap.model.beans.AuthUser
+import com.innovify.skillswap.model.beans.CreateVerifierProfileRequest
 import com.innovify.skillswap.model.beans.Certificate
 import com.innovify.skillswap.model.beans.CertificateLink
 import com.innovify.skillswap.model.beans.LearningPath
@@ -62,6 +63,24 @@ class SkillSwapViewModel : ViewModel() {
     // Devuelve true si el login fue correcto.
     // Usuario recién registrado: el Login lo muestra ya escrito al volver del registro
     var registeredUsername: String by mutableStateOf("")
+
+    // WF-10: habilitarse como Verificador de la habilidad de un nodo completado.
+    // Devuelve el texto que se le muestra al Estudiante (éxito o motivo del rechazo).
+    suspend fun enableAsVerifier(skillTag: String): String {
+        return try {
+            val response = RetrofitClient.webService.createVerifierProfile(
+                CreateVerifierProfileRequest(skillTag)
+            )
+            when {
+                response.isSuccessful -> "Listo: ya puedes recibir casos de $skillTag como Verificador"
+                response.code() == 409 -> "Ya estás habilitado como Verificador de $skillTag"
+                response.code() == 403 -> messageFrom(response, "Completa este nodo antes de habilitarte como Verificador")
+                else -> messageFrom(response, "No se pudo habilitar como Verificador (${response.code()})")
+            }
+        } catch (e: Exception) {
+            "No se pudo conectar con el servidor"
+        }
+    }
 
     // Registro de un Estudiante nuevo. No inicia sesión: primero debe verificar su correo.
     suspend fun signUp(username: String, email: String, password: String): Boolean {

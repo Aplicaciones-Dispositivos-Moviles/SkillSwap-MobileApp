@@ -2,6 +2,7 @@ package com.innovify.skillswap.model.response
 
 import com.innovify.skillswap.model.beans.AssessmentAttempt
 import com.innovify.skillswap.model.beans.AssessmentBlueprint
+import com.innovify.skillswap.model.beans.CreateVerifierProfileRequest
 import com.innovify.skillswap.model.beans.AuthUser
 import com.innovify.skillswap.model.beans.Certificate
 import com.innovify.skillswap.model.beans.CertificateLink
@@ -15,6 +16,7 @@ import com.innovify.skillswap.model.beans.SubmitAttemptRequest
 import com.innovify.skillswap.model.beans.SubmitMiniProjectRequest
 import com.innovify.skillswap.model.beans.UserResource
 import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -33,6 +35,11 @@ interface WebService {
     // 201 UserResource | 400 dominio no institucional o datos inválidos | 409 usuario o correo ya existe
     @POST("api/v1/authentication/sign-up")
     suspend fun signUp(@Body body: SignUpRequest): Response<UserResource>
+
+    // Habilita al Estudiante como Verificador de la habilidad de un nodo que completó.
+    // 201 perfil creado | 200 habilidad agregada | 400 | 403 nodo no completado | 409 ya habilitado
+    @POST("api/v1/verifier-profiles")
+    suspend fun createVerifierProfile(@Body body: CreateVerifierProfileRequest): Response<ResponseBody>
 
     // Todas las rutas del Estudiante, la más reciente primero. Solo el dueño puede leerlas.
     @GET("api/v1/learning-paths")
