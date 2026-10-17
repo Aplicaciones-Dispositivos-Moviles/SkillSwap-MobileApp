@@ -21,6 +21,7 @@ import com.innovify.skillswap.model.beans.LinkCertificateRequest
 import com.innovify.skillswap.model.beans.PathNode
 import com.innovify.skillswap.model.beans.QuizProgress
 import com.innovify.skillswap.model.beans.SignInRequest
+import com.innovify.skillswap.model.beans.SignUpRequest
 import com.innovify.skillswap.model.beans.SubmitAttemptRequest
 import com.innovify.skillswap.model.beans.SubmitMiniProjectRequest
 import com.innovify.skillswap.model.client.RetrofitClient
@@ -59,6 +60,26 @@ class SkillSwapViewModel : ViewModel() {
 
     // suspend: la VISTA lo llama dentro de viewModelScope.launch(Dispatchers.IO).
     // Devuelve true si el login fue correcto.
+    // Registro de un Estudiante nuevo. No inicia sesión: primero debe verificar su correo.
+    suspend fun signUp(username: String, email: String, password: String): Boolean {
+        return try {
+            val response = RetrofitClient.webService.signUp(SignUpRequest(username, email, password))
+            if (response.isSuccessful) {
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    400 -> messageFrom(response, "Revisa los datos. El correo debe ser institucional (.edu.pe)")
+                    409 -> messageFrom(response, "Ese usuario o correo ya está registrado")
+                    else -> "No se pudo crear la cuenta (${response.code()})"
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
     suspend fun signIn(username: String, password: String): Boolean {
         return try {
             val response = RetrofitClient.webService.signIn(SignInRequest(username, password))

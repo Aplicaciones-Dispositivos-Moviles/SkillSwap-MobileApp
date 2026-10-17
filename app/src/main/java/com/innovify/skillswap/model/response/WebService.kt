@@ -10,8 +10,10 @@ import com.innovify.skillswap.model.beans.LinkCertificateRequest
 import com.innovify.skillswap.model.beans.MiniProject
 import com.innovify.skillswap.model.beans.MiniProjectSubmission
 import com.innovify.skillswap.model.beans.SignInRequest
+import com.innovify.skillswap.model.beans.SignUpRequest
 import com.innovify.skillswap.model.beans.SubmitAttemptRequest
 import com.innovify.skillswap.model.beans.SubmitMiniProjectRequest
+import com.innovify.skillswap.model.beans.UserResource
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -27,6 +29,10 @@ interface WebService {
     // 200 AuthUser | 401 credenciales inválidas | 403 correo sin verificar
     @POST("api/v1/authentication/sign-in")
     suspend fun signIn(@Body body: SignInRequest): Response<AuthUser>
+
+    // 201 UserResource | 400 dominio no institucional o datos inválidos | 409 usuario o correo ya existe
+    @POST("api/v1/authentication/sign-up")
+    suspend fun signUp(@Body body: SignUpRequest): Response<UserResource>
 
     // Todas las rutas del Estudiante, la más reciente primero. Solo el dueño puede leerlas.
     @GET("api/v1/learning-paths")
