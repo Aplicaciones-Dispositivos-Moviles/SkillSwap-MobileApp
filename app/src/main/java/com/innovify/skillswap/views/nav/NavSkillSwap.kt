@@ -16,6 +16,7 @@ import com.innovify.skillswap.views.PathList
 import com.innovify.skillswap.views.ProjectDelivery
 import com.innovify.skillswap.views.Quiz
 import com.innovify.skillswap.views.QuizResult
+import com.innovify.skillswap.views.Register
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,6 +45,7 @@ fun NavSkillSwap(viewModel: SkillSwapViewModel, context: Context) {
     NavHost(navController = recordarPantalla, startDestination = "Login") {
 
         composable("Login") { Login(viewModel, context, recordarPantalla) }
+        composable("Register") { Register(viewModel, context, recordarPantalla) }
         composable("Path") { PathList(viewModel, context, recordarPantalla) }
         composable("Node") { NodeDetail(viewModel, context, recordarPantalla) }
         composable("Certificate") { CertificateCapture(viewModel, context, recordarPantalla) }

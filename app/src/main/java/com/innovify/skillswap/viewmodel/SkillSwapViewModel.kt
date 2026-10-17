@@ -60,11 +60,15 @@ class SkillSwapViewModel : ViewModel() {
 
     // suspend: la VISTA lo llama dentro de viewModelScope.launch(Dispatchers.IO).
     // Devuelve true si el login fue correcto.
+    // Usuario recién registrado: el Login lo muestra ya escrito al volver del registro
+    var registeredUsername: String by mutableStateOf("")
+
     // Registro de un Estudiante nuevo. No inicia sesión: primero debe verificar su correo.
     suspend fun signUp(username: String, email: String, password: String): Boolean {
         return try {
             val response = RetrofitClient.webService.signUp(SignUpRequest(username, email, password))
             if (response.isSuccessful) {
+                registeredUsername = username
                 true
             } else {
                 errorMessage = when (response.code()) {
