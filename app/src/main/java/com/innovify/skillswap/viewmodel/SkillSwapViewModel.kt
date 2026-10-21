@@ -14,6 +14,7 @@ import com.innovify.skillswap.model.beans.AuthUser
 import com.innovify.skillswap.model.beans.CreateVerifierProfileRequest
 import com.innovify.skillswap.model.beans.Certificate
 import com.innovify.skillswap.model.beans.CertificateLink
+import com.innovify.skillswap.model.beans.DeclareGoalRequest
 import com.innovify.skillswap.model.beans.LearningPath
 import com.innovify.skillswap.model.beans.LocalCertificate
 import com.innovify.skillswap.model.beans.MiniProject
@@ -23,6 +24,8 @@ import com.innovify.skillswap.model.beans.PathNode
 import com.innovify.skillswap.model.beans.QuizProgress
 import com.innovify.skillswap.model.beans.SignInRequest
 import com.innovify.skillswap.model.beans.SignUpRequest
+import com.innovify.skillswap.model.beans.SkillOption
+import com.innovify.skillswap.model.beans.SkillOptionsRequest
 import com.innovify.skillswap.model.beans.SubmitAttemptRequest
 import com.innovify.skillswap.model.beans.SubmitMiniProjectRequest
 import com.innovify.skillswap.model.client.RetrofitClient
@@ -217,6 +220,67 @@ class SkillSwapViewModel : ViewModel() {
             true
         } else {
             errorMessage = error
+            false
+        }
+    }
+
+    // ---------------------------------------------------- META Y HABILIDAD (T47)
+    // Meta escrita por el Estudiante y las habilidades candidatas que propone el backend (T46).
+    var goal: String by mutableStateOf("")
+    var skillOptions: List<SkillOption> by mutableStateOf(emptyList())
+
+    // suspend: la vista lo llama en Dispatchers.IO. true si hay opciones para elegir.
+    // Si el backend aún no tiene el endpoint (404), skillOptions queda vacío y la vista construye la ruta directo.
+    suspend fun loadSkillOptions(goalText: String): Boolean {
+        goal = goalText
+        skillOptions = emptyList()
+        return try {
+            val response = RetrofitClient.webService.getSkillOptions(SkillOptionsRequest(goalText))
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                skillOptions = body.sortedByDescending { it.affinity }
+                true
+            } else if (response.code() == 404) {
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    400 -> "Escribe tu meta (máximo 500 caracteres)"
+                    422 -> messageFrom(response, "No encontramos habilidades para esta meta. Cuéntanos qué quieres construir o para qué trabajo")
+                    else -> messageFrom(response, "No se pudo interpretar tu meta (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
+    // Construye la ruta con la habilidad confirmada (null = el backend interpreta la meta).
+    // true si se creó; la nueva ruta queda en path y en SQLite.
+    suspend fun declareGoal(context: Context, skillTag: String?): Boolean {
+        return try {
+            val response = RetrofitClient.webService.declareGoal(DeclareGoalRequest(goal, skillTag))
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                path = body
+                selectedNode = null
+                showingCache = false
+                try {
+                    db(context).savePath(body)
+                } catch (e: Exception) {
+                }
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    409 -> messageFrom(response, "No se pudo crear la ruta con tu plan actual")
+                    422 -> messageFrom(response, "No encontramos habilidades para esta meta")
+                    else -> messageFrom(response, "No se pudo crear la ruta (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
             false
         }
     }

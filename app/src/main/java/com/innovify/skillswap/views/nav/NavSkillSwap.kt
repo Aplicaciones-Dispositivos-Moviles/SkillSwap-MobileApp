@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import com.innovify.skillswap.views.CertificateCapture
+import com.innovify.skillswap.views.GoalInput
 import com.innovify.skillswap.views.Login
 import com.innovify.skillswap.views.NodeDetail
 import com.innovify.skillswap.views.PathList
@@ -17,6 +18,7 @@ import com.innovify.skillswap.views.ProjectDelivery
 import com.innovify.skillswap.views.Quiz
 import com.innovify.skillswap.views.QuizResult
 import com.innovify.skillswap.views.Register
+import com.innovify.skillswap.views.SkillConfirmation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -58,6 +60,8 @@ fun NavSkillSwap(viewModel: SkillSwapViewModel, context: Context) {
         composable("Login") { Login(viewModel, context, recordarPantalla) }
         composable("Register") { Register(viewModel, context, recordarPantalla) }
         composable("Path") { PathList(viewModel, context, recordarPantalla) }
+        composable("Goal") { GoalInput(viewModel, context, recordarPantalla) }
+        composable("SkillConfirmation") { SkillConfirmation(viewModel, context, recordarPantalla) }
         composable("Node") { NodeDetail(viewModel, context, recordarPantalla) }
         composable("Certificate") { CertificateCapture(viewModel, context, recordarPantalla) }
         composable("Quiz") { Quiz(viewModel, context, recordarPantalla) }

@@ -6,12 +6,15 @@ import com.innovify.skillswap.model.beans.CreateVerifierProfileRequest
 import com.innovify.skillswap.model.beans.AuthUser
 import com.innovify.skillswap.model.beans.Certificate
 import com.innovify.skillswap.model.beans.CertificateLink
+import com.innovify.skillswap.model.beans.DeclareGoalRequest
 import com.innovify.skillswap.model.beans.LearningPath
 import com.innovify.skillswap.model.beans.LinkCertificateRequest
 import com.innovify.skillswap.model.beans.MiniProject
 import com.innovify.skillswap.model.beans.MiniProjectSubmission
 import com.innovify.skillswap.model.beans.SignInRequest
 import com.innovify.skillswap.model.beans.SignUpRequest
+import com.innovify.skillswap.model.beans.SkillOption
+import com.innovify.skillswap.model.beans.SkillOptionsRequest
 import com.innovify.skillswap.model.beans.SubmitAttemptRequest
 import com.innovify.skillswap.model.beans.SubmitMiniProjectRequest
 import com.innovify.skillswap.model.beans.UserResource
@@ -44,6 +47,16 @@ interface WebService {
     // Todas las rutas del Estudiante, la más reciente primero. Solo el dueño puede leerlas.
     @GET("api/v1/learning-paths")
     suspend fun getLearningPaths(@Query("studentId") studentId: Int): Response<List<LearningPath>>
+
+    // T46/T47: habilidades candidatas del catálogo para la meta, de mayor a menor afinidad.
+    // 200 lista | 400 meta vacía o muy larga | 422 la meta no coincide con ninguna habilidad
+    @POST("api/v1/learning-paths/skill-options")
+    suspend fun getSkillOptions(@Body body: SkillOptionsRequest): Response<List<SkillOption>>
+
+    // Declara la meta y construye la ruta con la habilidad confirmada.
+    // 201 LearningPath | 400 | 409 límite del plan o ya demostró todas las habilidades | 422 meta sin habilidades
+    @POST("api/v1/learning-paths")
+    suspend fun declareGoal(@Body body: DeclareGoalRequest): Response<LearningPath>
 
     // Sube la foto del certificado + los campos leídos por el OCR (multipart).
     // 201 Certificate | 400 | 409 archivo duplicado | 413 muy grande | 415 tipo inválido.
