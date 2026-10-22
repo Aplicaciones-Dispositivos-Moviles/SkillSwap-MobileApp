@@ -17,6 +17,8 @@ import com.innovify.skillswap.model.beans.SkillOption
 import com.innovify.skillswap.model.beans.SkillOptionsRequest
 import com.innovify.skillswap.model.beans.SubmitAttemptRequest
 import com.innovify.skillswap.model.beans.SubmitMiniProjectRequest
+import com.innovify.skillswap.model.beans.VerificationCase
+import com.innovify.skillswap.model.beans.VerificationCaseDetail
 import com.innovify.skillswap.model.beans.UserResource
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
@@ -101,12 +103,31 @@ interface WebService {
         @Query("regenerate") regenerate: Boolean
     ): Response<MiniProject>
 
-    // Entrega el enlace del repositorio. 201 MiniProjectSubmission | 400 enlace inválido | 403 | 404 |
+    // Entrega el enlace del repositorio. 201 MiniProjectSubmission con evaluationStatus "Pending" (la IA evalúa
+    // en segundo plano) | 400 enlace inválido | 403 | 404 |
     // 409 plazo vencido, ya entregado, hay uno más nuevo o el nodo tiene un caso en curso
     @POST("api/v1/mini-projects/{miniProjectId}/submissions")
     suspend fun submitMiniProject(
         @Path("miniProjectId") miniProjectId: Int,
         @Body body: SubmitMiniProjectRequest
     ): Response<MiniProjectSubmission>
+
+    // La entrega con su evaluación preliminar; se consulta hasta que evaluationStatus deje de ser "Pending".
+    // 200 MiniProjectSubmission | 403 no es del Estudiante | 404
+    @GET("api/v1/mini-projects/{miniProjectId}/submissions/{submissionId}")
+    suspend fun getMiniProjectSubmission(
+        @Path("miniProjectId") miniProjectId: Int,
+        @Path("submissionId") submissionId: Int
+    ): Response<MiniProjectSubmission>
+
+    // Detalle de un caso de verificación: estado, decisión, notas y preguntas falladas (quiz).
+    // 200 VerificationCaseDetail | 403 no es del Estudiante | 404
+    @GET("api/v1/verification-cases/{id}")
+    suspend fun getVerificationCase(@Path("id") id: Int): Response<VerificationCaseDetail>
+
+    // Apela un caso rechazado (una sola vez); el caso se reabre con otro Verificador.
+    // 200 VerificationCase | 403 | 404 | 409 no está rechazado, ya se apeló o el nodo tiene otro caso abierto
+    @POST("api/v1/verification-cases/{id}/appeal")
+    suspend fun appealVerificationCase(@Path("id") id: Int): Response<VerificationCase>
 
 }

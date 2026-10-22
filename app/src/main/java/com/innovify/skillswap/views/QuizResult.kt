@@ -28,6 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -217,7 +218,13 @@ fun QuizResult(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
                     text = "Abrimos el caso #$caseId: un Verificador revisará tu intento" +
                         (result.verificationCaseStatus?.let { " (estado: $it)." } ?: "."),
                     tint = SkillBlue,
-                    container = SkillBlueContainer
+                    container = SkillBlueContainer,
+                    // WF-08: desde aquí el Estudiante ve el estado del caso y las preguntas que falló
+                    actionLabel = "Ver estado del caso",
+                    onAction = {
+                        viewModel.selectedCaseId = caseId
+                        nav.navigate("CaseStatus")
+                    }
                 )
             }
             result.planLimitReached?.let { limit ->
@@ -298,9 +305,15 @@ private fun ResultStat(value: String, label: String, modifier: Modifier, color: 
     }
 }
 
-// Aviso con ícono de información (caso abierto o límite del plan)
+// Aviso con ícono de información (caso abierto o límite del plan); puede llevar un botón de acción
 @Composable
-private fun NoticeCard(text: String, tint: Color, container: Color) {
+private fun NoticeCard(
+    text: String,
+    tint: Color,
+    container: Color,
+    actionLabel: String? = null,
+    onAction: () -> Unit = {}
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = container),
         modifier = Modifier
@@ -314,6 +327,11 @@ private fun NoticeCard(text: String, tint: Color, container: Color) {
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(start = 12.dp)
             )
+        }
+        if (actionLabel != null) {
+            TextButton(onClick = onAction, modifier = Modifier.padding(start = 8.dp)) {
+                Text(text = actionLabel)
+            }
         }
     }
 }

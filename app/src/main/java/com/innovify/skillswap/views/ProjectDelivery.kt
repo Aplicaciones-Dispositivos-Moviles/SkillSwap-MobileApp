@@ -14,12 +14,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,14 +38,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
+import com.innovify.skillswap.model.beans.MiniProjectSubmission
 import com.innovify.skillswap.ui.theme.AiContainer
 import com.innovify.skillswap.ui.theme.AiViolet
 import com.innovify.skillswap.ui.theme.NeutralSurface
 import com.innovify.skillswap.ui.theme.SkillBlue
+import com.innovify.skillswap.ui.theme.SkillBlueContainer
 import com.innovify.skillswap.ui.theme.Success
 import com.innovify.skillswap.ui.theme.SuccessContainer
 import com.innovify.skillswap.ui.theme.TextSecondary
 import com.innovify.skillswap.ui.theme.Warning
+import com.innovify.skillswap.ui.theme.WarningContainer
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -105,6 +111,9 @@ fun ProjectDelivery(viewModel: SkillSwapViewModel, context: Context, nav: NavHos
     var repositoryUrl by rememberSaveable { mutableStateOf("") }
     var urlError by remember { mutableStateOf<String?>(null) }
     var showSent by remember { mutableStateOf(false) }
+    // T56: true si se acabó el tiempo de espera del resultado; evalRetry reinicia la espera con "Actualizar"
+    var evalTimedOut by remember { mutableStateOf(false) }
+    var evalRetry by remember { mutableStateOf(0) }
 
     // Abre el proyecto del nodo (con internet puede generarlo la IA: puede tardar)
     fun open(forceNew: Boolean) {
@@ -129,6 +138,18 @@ fun ProjectDelivery(viewModel: SkillSwapViewModel, context: Context, nav: NavHos
     val projectId = viewModel.project?.id
     LaunchedEffect(projectId) {
         if (projectId != null && repositoryUrl.isEmpty()) repositoryUrl = loadDraft(context, projectId)
+    }
+
+    // T56: la IA evalúa la entrega en segundo plano. Mientras siga Pending se consulta el backend
+    // (cada 3 s, máx. ~90 s); la espera se cancela sola al salir de la pantalla.
+    val currentSubmission = viewModel.projectSubmission
+    val evaluating = currentSubmission?.isEvaluating() == true
+    LaunchedEffect(currentSubmission?.id, evaluating, viewModel.connectivity.isOnline, evalRetry) {
+        if (evaluating && viewModel.connectivity.isOnline) {
+            evalTimedOut = false
+            val done = withContext(Dispatchers.IO) { viewModel.waitForEvaluation(context) }
+            evalTimedOut = !done
+        }
     }
 
     Column(
@@ -221,29 +242,21 @@ fun ProjectDelivery(viewModel: SkillSwapViewModel, context: Context, nav: NavHos
                 }
 
                 if (submission != null) {
-                    // La entrega es única: se muestra lo entregado y no se puede volver a enviar
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = SuccessContainer),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 24.dp)
-                    ) {
-                        Row(modifier = Modifier.padding(16.dp)) {
-                            Icon(imageVector = Icons.Filled.CheckCircle, contentDescription = null, tint = Success)
-                            Column(modifier = Modifier.padding(start = 12.dp)) {
-                                Text(
-                                    text = "Entregado, en evaluación",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Success
-                                )
-                                Text(text = submission.repositoryUrl, modifier = Modifier.padding(top = 5.dp))
-                                Text(
-                                    text = "Entregado el ${localDate(submission.submittedAt)}",
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                            }
-                        }
-                    }
+                    // La entrega es única: se muestra lo entregado y el resultado de la evaluación con IA (T56)
+                    SubmissionResult(
+                        submission = submission,
+                        timedOut = evalTimedOut,
+                        online = viewModel.connectivity.isOnline,
+                        onRefresh = {
+                            evalTimedOut = false
+                            evalRetry += 1
+                        },
+                        onViewCase = { caseId ->
+                            viewModel.selectedCaseId = caseId
+                            nav.navigate("CaseStatus")
+                        },
+                        onContinue = { nav.popBackStack("Path", false) }
+                    )
                 } else if (expired) {
                     Button(
                         enabled = viewModel.connectivity.isOnline,
@@ -359,4 +372,139 @@ fun ProjectDelivery(viewModel: SkillSwapViewModel, context: Context, nav: NavHos
         )
     }
 
+}
+
+// T56 · Resultado de la entrega: Pending (la IA evalúa), Approved, Escalated o EscalationLimitReached.
+@Composable
+private fun SubmissionResult(
+    submission: MiniProjectSubmission,
+    timedOut: Boolean,
+    online: Boolean,
+    onRefresh: () -> Unit,
+    onViewCase: (Int) -> Unit,
+    onContinue: () -> Unit
+) {
+    val look = when (submission.evaluationStatus) {
+        "Approved" -> Triple("Proyecto aprobado", Success, SuccessContainer)
+        "Escalated" -> Triple("Un Verificador revisará tu entrega", SkillBlue, SkillBlueContainer)
+        "EscalationLimitReached" -> Triple("Entrega recibida, sin revisión de un Verificador", Warning, WarningContainer)
+        else -> Triple("Entregado, en evaluación", AiViolet, AiContainer)
+    }
+    val title = look.first
+    val color = look.second
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = look.third),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 24.dp)
+    ) {
+        Row(modifier = Modifier.padding(16.dp)) {
+            Icon(
+                imageVector = if (submission.evaluationStatus == "Approved") Icons.Filled.CheckCircle else Icons.Filled.Info,
+                contentDescription = null,
+                tint = color
+            )
+            Column(modifier = Modifier.padding(start = 12.dp)) {
+                Text(text = title, style = MaterialTheme.typography.titleMedium, color = color)
+                Text(text = submission.repositoryUrl, modifier = Modifier.padding(top = 5.dp))
+                Text(
+                    text = "Entregado el ${localDate(submission.submittedAt)}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+
+                when (submission.evaluationStatus) {
+                    "Approved" -> {
+                        Text(
+                            text = "La IA calificó tu entrega con ${submission.preliminaryScore ?: "—"} / 100 y el nodo quedó completado.",
+                            modifier = Modifier.padding(top = 12.dp)
+                        )
+                    }
+                    "Escalated" -> {
+                        Text(
+                            text = "La IA calificó tu entrega con ${submission.preliminaryScore ?: "—"} / 100, " +
+                                "pero no pudo aprobarla por sí sola: un Verificador la revisa con la rúbrica.",
+                            modifier = Modifier.padding(top = 12.dp)
+                        )
+                    }
+                    "EscalationLimitReached" -> {
+                        Text(
+                            text = "Usaste todas las escalaciones de tu plan este mes, por eso no se abrió un caso de " +
+                                "verificación. Mejora tu plan para que un Verificador la revise.",
+                            modifier = Modifier.padding(top = 12.dp)
+                        )
+                    }
+                    else -> {
+                        if (!online) {
+                            Text(
+                                text = "Sin conexión: el resultado se mostrará cuando vuelva internet.",
+                                modifier = Modifier.padding(top = 12.dp)
+                            )
+                        } else if (timedOut) {
+                            Text(
+                                text = "La evaluación está tardando más de lo normal.",
+                                modifier = Modifier.padding(top = 12.dp)
+                            )
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(top = 12.dp)
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                Text(
+                                    text = "La IA está evaluando tu entrega…",
+                                    modifier = Modifier.padding(start = 12.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Lo que la IA sugiere mejorar (todo lo generado por IA va en violeta)
+                if (!submission.preliminaryFeedback.isNullOrBlank()) {
+                    Text(
+                        text = "Sugerencias de la IA",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = AiViolet,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                    Text(text = submission.preliminaryFeedback ?: "", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        }
+    }
+
+    // Acciones según el resultado
+    val caseId = submission.verificationCaseId
+    if (submission.evaluationStatus == "Approved") {
+        Button(
+            onClick = onContinue,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+                .height(52.dp)
+        ) {
+            Text(text = "Continuar con mi ruta")
+        }
+    } else if (submission.evaluationStatus == "Escalated" && caseId != null) {
+        Button(
+            onClick = { onViewCase(caseId) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+                .height(52.dp)
+        ) {
+            Text(text = "Ver estado del caso")
+        }
+    } else if (submission.isEvaluating() && online && timedOut) {
+        OutlinedButton(
+            onClick = onRefresh,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+                .height(52.dp)
+        ) {
+            Text(text = "Actualizar")
+        }
+    }
 }
