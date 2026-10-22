@@ -26,12 +26,27 @@ data class SubmitMiniProjectRequest(
     var repositoryUrl: String
 )
 
-// MiniProjectSubmissionResource: la entrega recibida (la evaluación se hace después).
+// MiniProjectSubmissionResource: la entrega y su evaluación preliminar con IA (T56).
+// evaluationStatus: "Pending" (la IA evalúa) | "Approved" (nodo completado) | "Escalated" (lo revisa un
+// Verificador, ver verificationCaseId) | "EscalationLimitReached" (no se abrió caso: se agotaron las
+// escalaciones del plan). Los campos de evaluación llegan null mientras está Pending.
 data class MiniProjectSubmission(
     var id: Int,
     var miniProjectId: Int,
     var pathNodeId: Int,
     var skillTag: String,
     var repositoryUrl: String,
-    var submittedAt: String?
-)
+    var submittedAt: String?,
+    var evaluationStatus: String?,
+    var preliminaryScore: Int?,
+    var preliminaryConfidence: Int?,
+    var preliminaryFeedback: String?,
+    var evaluatedAt: String?,
+    var verificationCaseId: Int?,
+    var verificationCaseStatus: String?
+) {
+    // Sin estado (entrega guardada antes de T56) o Pending: todavía falta el resultado.
+    fun isEvaluating(): Boolean {
+        return evaluationStatus == null || evaluationStatus == "Pending"
+    }
+}

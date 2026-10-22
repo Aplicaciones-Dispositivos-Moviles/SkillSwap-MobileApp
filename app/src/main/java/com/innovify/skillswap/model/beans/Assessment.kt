@@ -31,8 +31,9 @@ data class PlanLimitReached(
     var upgradeAvailable: Boolean
 )
 
-// FailedQuestionResource: pregunta fallada y lo que eligió el Estudiante. Hoy el backend solo la entrega al
-// Verificador; el campo failedQuestions del intento llega null hasta que el backend lo exponga al Estudiante.
+// FailedQuestionResource: pregunta fallada y lo que eligió el Estudiante (la correcta nunca viaja al teléfono).
+// El Estudiante la lee en GET api/v1/verification-cases/{id} (VerificationCaseDetail.failedQuestions);
+// el campo failedQuestions del intento llega null.
 data class FailedQuestion(
     var position: Int,
     var question: String,
