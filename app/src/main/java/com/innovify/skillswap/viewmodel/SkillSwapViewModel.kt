@@ -28,10 +28,12 @@ import com.innovify.skillswap.model.beans.SkillOption
 import com.innovify.skillswap.model.beans.SkillOptionsRequest
 import com.innovify.skillswap.model.beans.SubmitAttemptRequest
 import com.innovify.skillswap.model.beans.SubmitMiniProjectRequest
+import com.innovify.skillswap.model.beans.VerificationCaseDetail
 import com.innovify.skillswap.model.client.RetrofitClient
 import com.innovify.skillswap.model.db.SkillSwapDbHelper
 import okhttp3.MediaType
 import okhttp3.MultipartBody
+import kotlinx.coroutines.delay
 import okhttp3.RequestBody
 import retrofit2.Response
 import java.io.File
@@ -583,6 +585,113 @@ class SkillSwapViewModel : ViewModel() {
             }
         } catch (e: Exception) {
             errorMessage = "No se pudo entregar el proyecto. Revisa tu conexión"
+            false
+        }
+    }
+
+    // ------------------------------------------------ EVALUACIÓN DE LA ENTREGA (T56)
+    // La IA evalúa la entrega en segundo plano: se consulta cada 3 s, máximo 30 veces (≈ 90 s).
+    private val evaluationPollAttempts = 30
+    private val evaluationPollMillis = 3000L
+
+    // Vuelve a pedir la entrega al backend (con su evaluación preliminar) y la guarda. true si la leyó.
+    suspend fun refreshSubmission(context: Context): Boolean {
+        val current = projectSubmission ?: return false
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para ver el resultado de la evaluación"
+            return false
+        }
+        return try {
+            val response = RetrofitClient.webService.getMiniProjectSubmission(current.miniProjectId, current.id)
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                try {
+                    db(context).saveSubmission(current.pathNodeId, body)
+                } catch (e: Exception) {
+                }
+                projectSubmission = body
+                true
+            } else {
+                errorMessage = messageFrom(response, "No se pudo leer el resultado de la evaluación (${response.code()})")
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
+    // Espera el resultado de la evaluación. true si ya lo hay; false si se acabó el tiempo (el Estudiante
+    // puede volver a pedirlo). Si la IA aprobó, el nodo quedó completado en el backend: se recarga la ruta.
+    suspend fun waitForEvaluation(context: Context): Boolean {
+        for (attempt in 1..evaluationPollAttempts) {
+            if (refreshSubmission(context) && projectSubmission?.isEvaluating() == false) {
+                if (projectSubmission?.evaluationStatus == "Approved") {
+                    val nodeId = selectedNode?.id
+                    if (loadPath(context)) {
+                        selectedNode = path?.nodes?.firstOrNull { it.id == nodeId } ?: selectedNode
+                    }
+                }
+                return true
+            }
+            if (attempt < evaluationPollAttempts) delay(evaluationPollMillis)
+        }
+        return false
+    }
+
+    // ------------------------------------------------- CASO DE VERIFICACIÓN (WF-08)
+    // Caso que se está viendo y su detalle (null mientras no se haya cargado)
+    var selectedCaseId: Int? by mutableStateOf(null)
+    var caseDetail: VerificationCaseDetail? by mutableStateOf(null)
+
+    // Estado, decisión, notas del Verificador y, en un quiz, las preguntas falladas. true si lo leyó.
+    suspend fun loadCase(caseId: Int): Boolean {
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para ver el estado del caso"
+            return false
+        }
+        return try {
+            val response = RetrofitClient.webService.getVerificationCase(caseId)
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                caseDetail = body
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    403 -> "Este caso no es tuyo"
+                    404 -> "No encontramos ese caso"
+                    else -> messageFrom(response, "No se pudo cargar el caso (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
+    // Apela un caso rechazado (una sola vez). El backend lo reabre con otro Verificador. true si se envió.
+    suspend fun appealCase(caseId: Int): Boolean {
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para apelar"
+            return false
+        }
+        return try {
+            val response = RetrofitClient.webService.appealVerificationCase(caseId)
+            val body = response.body()
+            if (response.isSuccessful) {
+                if (body != null) caseDetail = caseDetail?.copy(verificationCase = body)
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    403 -> "Este caso no es tuyo"
+                    404 -> "No encontramos ese caso"
+                    else -> messageFrom(response, "No se pudo enviar la apelación (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
             false
         }
     }
