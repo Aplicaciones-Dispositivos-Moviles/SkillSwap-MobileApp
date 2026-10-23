@@ -8,6 +8,7 @@ import com.innovify.skillswap.model.beans.Certificate
 import com.innovify.skillswap.model.beans.CertificateLink
 import com.innovify.skillswap.model.beans.CreditTransaction
 import com.innovify.skillswap.model.beans.DeclareGoalRequest
+import com.innovify.skillswap.model.beans.DeviceTokenRequest
 import com.innovify.skillswap.model.beans.LearningPath
 import com.innovify.skillswap.model.beans.LinkCertificateRequest
 import com.innovify.skillswap.model.beans.MiniProject
@@ -26,9 +27,12 @@ import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -140,5 +144,14 @@ interface WebService {
     // Movimientos de la billetera, del más reciente al más antiguo. 200 | 403 | 404
     @GET("api/v1/wallets/{userId}/transactions")
     suspend fun getWalletTransactions(@Path("userId") userId: Int): Response<List<CreditTransaction>>
+
+    // Registra (o reemplaza) el token de notificaciones push de este teléfono. 204 | 400 InvalidDeviceToken
+    @PUT("api/v1/users/me/device-token")
+    suspend fun registerDeviceToken(@Body body: DeviceTokenRequest): Response<ResponseBody>
+
+    // Olvida el token (permiso negado o cierre de sesión). 204, también si no había. Lleva su propio
+    // Authorization porque al cerrar sesión el token global ya se limpió.
+    @DELETE("api/v1/users/me/device-token")
+    suspend fun removeDeviceToken(@Header("Authorization") authorization: String): Response<ResponseBody>
 
 }
