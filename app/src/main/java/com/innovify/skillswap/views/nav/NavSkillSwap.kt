@@ -1,9 +1,15 @@
 package com.innovify.skillswap.views.nav
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -50,6 +56,36 @@ fun NavSkillSwap(viewModel: SkillSwapViewModel, context: Context) {
         val route = recordarPantalla.currentDestination?.route
         if (viewModel.user == null && route != null && route != "Login" && route != "Register") {
             recordarPantalla.navigate("Login") { popUpTo(0) }
+        }
+    }
+
+    // Notificaciones push: se pide el permiso una sola vez tras iniciar sesión (Android 13+). Si lo niegan, la app
+    // sigue igual; si lo conceden (o ya estaba concedido), el token de este teléfono se envía al backend.
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        viewModel.syncDeviceToken(context)
+    }
+    LaunchedEffect(viewModel.user, online) {
+        if (viewModel.user == null) return@LaunchedEffect
+        val needsPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        if (needsPermission && viewModel.shouldAskNotificationPermission(context)) {
+            viewModel.markNotificationPermissionAsked(context)
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            viewModel.syncDeviceToken(context)
+        }
+    }
+
+    // Notificación tocada: abre la pantalla que corresponde (sin sesión se queda en el Login)
+    LaunchedEffect(viewModel.pendingRoute, viewModel.user) {
+        val route = viewModel.pendingRoute ?: return@LaunchedEffect
+        viewModel.pendingRoute = null
+        if (viewModel.user == null) return@LaunchedEffect
+        if (route == "Path") {
+            recordarPantalla.navigate("Path") { popUpTo("Path") { inclusive = true } }
+        } else {
+            recordarPantalla.navigate(route) { launchSingleTop = true }
         }
     }
 
