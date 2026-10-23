@@ -5,7 +5,10 @@ import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import com.innovify.skillswap.model.beans.ApiError
 import com.innovify.skillswap.model.beans.AssessmentAttempt
@@ -17,6 +20,7 @@ import com.innovify.skillswap.model.beans.CertificateLink
 import com.innovify.skillswap.model.beans.CertificateMismatch
 import com.innovify.skillswap.model.beans.CreditTransaction
 import com.innovify.skillswap.model.beans.DeclareGoalRequest
+import com.innovify.skillswap.model.beans.DeviceTokenRequest
 import com.innovify.skillswap.model.beans.LearningPath
 import com.innovify.skillswap.model.beans.LocalCertificate
 import com.innovify.skillswap.model.beans.MiniProject
@@ -36,7 +40,9 @@ import com.innovify.skillswap.model.client.RetrofitClient
 import com.innovify.skillswap.model.db.SkillSwapDbHelper
 import okhttp3.MediaType
 import okhttp3.MultipartBody
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import okhttp3.RequestBody
 import retrofit2.Response
 import java.io.File
@@ -89,6 +95,7 @@ class SkillSwapViewModel : ViewModel() {
     // Cierra la sesión: borra lo guardado y limpia lo que se ve en pantalla.
     // La copia local de la ruta (SQLite) se conserva para cuando vuelva a entrar.
     fun signOut(context: Context) {
+        forgetDeviceToken() // antes de limpiar el JWT: el siguiente usuario de este teléfono no debe recibir sus avisos
         sessionPrefs(context).edit().remove("user").apply()
         RetrofitClient.token = null
         user = null
@@ -291,6 +298,61 @@ class SkillSwapViewModel : ViewModel() {
         } catch (e: Exception) {
             errorMessage = "No se pudo conectar con el servidor"
             false
+        }
+    }
+
+    // ------------------------------------------------------ NOTIFICACIONES PUSH
+    // Ruta a la que hay que ir porque el Estudiante tocó una notificación (NavSkillSwap la consume y la limpia)
+    var pendingRoute: String? by mutableStateOf(null)
+
+    // El permiso se pide una sola vez; si lo niegan, la app sigue funcionando sin avisos.
+    fun shouldAskNotificationPermission(context: Context): Boolean =
+        !sessionPrefs(context).getBoolean("notification_permission_asked", false)
+
+    fun markNotificationPermissionAsked(context: Context) {
+        sessionPrefs(context).edit().putBoolean("notification_permission_asked", true).apply()
+    }
+
+    // Con el permiso concedido envía el token de este teléfono al backend; sin permiso, lo borra.
+    // Se llama tras iniciar sesión, al reabrir la app y al recuperar internet (el PUT se puede repetir).
+    fun syncDeviceToken(context: Context) {
+        if (user == null || !connectivity.isOnline) return
+        if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+            forgetDeviceToken()
+            return
+        }
+        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    RetrofitClient.webService.registerDeviceToken(DeviceTokenRequest(token))
+                } catch (e: Exception) {
+                    // sin red: se reintenta cuando vuelva internet
+                }
+            }
+        }
+    }
+
+    private fun forgetDeviceToken() {
+        val jwt = RetrofitClient.token ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                RetrofitClient.webService.removeDeviceToken("Bearer $jwt")
+            } catch (e: Exception) {
+                // si falla, el backend olvida el token solo cuando FCM lo reporta inválido
+            }
+        }
+    }
+
+    // data.type de la notificación tocada -> pantalla que se abre
+    fun openFromNotification(type: String, caseId: Int?) {
+        pendingRoute = when (type) {
+            "MiniProjectEscalatedByAi", "VerificationCaseResolved" ->
+                if (caseId != null) {
+                    selectedCaseId = caseId
+                    "CaseStatus"
+                } else "Path"
+            "MiniProjectApprovedByAi" -> "Path"
+            else -> null
         }
     }
 

@@ -12,6 +12,9 @@
     <!-- T49: detectar si hay internet (ConnectivityManager) -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- Notificaciones push: en Android 13+ se pide en tiempo de ejecución; si la niegan, la app sigue igual -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -24,6 +27,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:label="@string/app_name"
             android:theme="@style/Theme.SkillSwap"
             android:windowSoftInputMode="adjustResize">
@@ -33,6 +37,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Push de Firebase: el servicio recibe el token nuevo y los mensajes con la app abierta -->
+        <service
+            android:name=".SkillSwapMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <!-- Con la app cerrada o en segundo plano, el sistema muestra la notificación con este canal e ícono -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="skillswap_updates" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
 
         <!-- Comparte con la cámara el archivo donde se guarda la foto (cache/certificates) -->
         <provider

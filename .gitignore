@@ -16,4 +16,7 @@ local.properties
 
 .kotlin/
 *.apk
+
+# Configuración de Firebase del proyecto skillswap-moviles (se comparte por chat, no por Git)
+app/google-services.json
 .idea/
