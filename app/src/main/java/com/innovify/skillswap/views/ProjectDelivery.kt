@@ -55,20 +55,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-
-// Fecha UTC (ISO-8601) del backend -> hora local del teléfono. Si no se puede leer, se muestra tal cual.
-private fun localDate(iso: String?): String {
-    if (iso == null) return "—"
-    return try {
-        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-            .withZone(ZoneId.systemDefault())
-            .format(Instant.parse(iso))
-    } catch (e: Exception) {
-        iso
-    }
-}
 
 // Tiempo que falta para el plazo, o null si ya venció o no se pudo leer.
 private fun remaining(dueIso: String?): String? {

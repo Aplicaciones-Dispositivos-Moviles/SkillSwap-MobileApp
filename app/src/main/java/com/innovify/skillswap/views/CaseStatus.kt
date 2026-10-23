@@ -48,21 +48,6 @@ import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-
-// Fecha UTC (ISO-8601) del backend -> hora local del teléfono. Si no se puede leer, se muestra tal cual.
-private fun localDate(iso: String?): String {
-    if (iso == null) return "—"
-    return try {
-        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-            .withZone(ZoneId.systemDefault())
-            .format(Instant.parse(iso))
-    } catch (e: Exception) {
-        iso
-    }
-}
 
 // Texto y colores del estado del caso (nunca solo color: el chip siempre lleva texto)
 private class CaseLook(val label: String, val message: String, val color: Color, val container: Color)
