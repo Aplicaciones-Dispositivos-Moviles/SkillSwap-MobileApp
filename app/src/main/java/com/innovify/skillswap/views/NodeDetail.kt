@@ -152,15 +152,27 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
                         }
                     }
 
-                    // T50: el quiz se rinde cuando el nodo está disponible y ya tiene su certificado vinculado
-                    if (node.status == "Available" && node.linkedCertificateId != null) {
-                        Button(
-                            onClick = { nav.navigate("Quiz") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp)
-                        ) {
-                            Text(text = "Rendir quiz")
+                    // T50: el quiz se puede rendir con el nodo disponible; el certificado es opcional y el backend
+                    // decide si hace falta (con certificado vinculado el quiz es la acción principal)
+                    if (node.status == "Available") {
+                        if (node.linkedCertificateId != null) {
+                            Button(
+                                onClick = { nav.navigate("Quiz") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp)
+                            ) {
+                                Text(text = "Rendir quiz")
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { nav.navigate("Quiz") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp)
+                            ) {
+                                Text(text = "Rendir quiz")
+                            }
                         }
                     }
 

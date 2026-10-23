@@ -27,6 +27,27 @@ import com.innovify.skillswap.ui.theme.SkillBlue
 import com.innovify.skillswap.ui.theme.Success
 import com.innovify.skillswap.ui.theme.SuccessContainer
 import com.innovify.skillswap.ui.theme.TextSecondary
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+
+// Fecha del backend (UTC, ISO-8601, normalmente con "Z") -> hora local del teléfono (dd/MM/yyyy HH:mm).
+// Si no se puede leer, se muestra tal cual. La hora sigue la zona del teléfono (el emulador usa la suya).
+fun localDate(iso: String?): String {
+    if (iso == null) return "—"
+    return try {
+        val instant = try {
+            Instant.parse(iso)
+        } catch (e: Exception) {
+            LocalDateTime.parse(iso).toInstant(ZoneOffset.UTC) // sin "Z": el backend siempre manda UTC
+        }
+        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.systemDefault()).format(instant)
+    } catch (e: Exception) {
+        iso
+    }
+}
 
 // Barra superior de las pantallas internas: flecha de volver + título (mock-ups 06, 08, 20)
 @Composable
