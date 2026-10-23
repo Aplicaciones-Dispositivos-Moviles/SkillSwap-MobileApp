@@ -31,6 +31,34 @@ data class CertificateLink(
     var node: PathNode?
 )
 
+// Un nodo de la ruta que el certificado sí cubre (parte del 422 CertificateSkillMismatch)
+data class SuggestedNode(
+    var nodeId: Int,
+    var skillTag: String,
+    var affinity: Double
+)
+
+// 422 CertificateSkillMismatch: el certificado no cubre la habilidad del nodo. affinity y threshold son de este nodo;
+// suggestedNodes son los nodos de la ruta que sí cubre. El backend los manda como campos del cuerpo de error;
+// si vinieran dentro de "details" también se leen.
+data class CertificateMismatch(
+    var affinity: Double?,
+    var threshold: Double?,
+    var suggestedNodes: List<SuggestedNode>?
+) {
+    companion object {
+        fun fromErrorBody(raw: String?): CertificateMismatch? {
+            return try {
+                val root = com.google.gson.JsonParser.parseString(raw).asJsonObject
+                val source = if (root.has("suggestedNodes")) root else root.getAsJsonObject("details")
+                com.google.gson.Gson().fromJson(source, CertificateMismatch::class.java)
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+}
+
 // Cuerpo de error del backend (ProblemDetail): title = código, detail = mensaje legible
 data class ApiError(
     var title: String?,

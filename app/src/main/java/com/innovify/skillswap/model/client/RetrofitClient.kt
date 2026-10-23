@@ -19,6 +19,7 @@ object RetrofitClient {
             .writeTimeout(60, TimeUnit.SECONDS)
             .addInterceptor { chain ->
                 val builder = chain.request().newBuilder()
+                    .header("Accept-Language", "es-419") // errores del backend y textos de la IA en español
                 token?.let { builder.header("Authorization", "Bearer $it") }
                 chain.proceed(builder.build())
             }
