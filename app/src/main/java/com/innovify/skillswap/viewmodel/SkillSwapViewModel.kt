@@ -14,6 +14,7 @@ import com.innovify.skillswap.model.beans.AuthUser
 import com.innovify.skillswap.model.beans.CreateVerifierProfileRequest
 import com.innovify.skillswap.model.beans.Certificate
 import com.innovify.skillswap.model.beans.CertificateLink
+import com.innovify.skillswap.model.beans.CertificateMismatch
 import com.innovify.skillswap.model.beans.DeclareGoalRequest
 import com.innovify.skillswap.model.beans.LearningPath
 import com.innovify.skillswap.model.beans.LocalCertificate
@@ -291,6 +292,8 @@ class SkillSwapViewModel : ViewModel() {
     // Último certificado subido y su vínculo con el nodo (null mientras no se hayan enviado).
     var certificate: Certificate? by mutableStateOf(null)
     var certificateLink: CertificateLink? by mutableStateOf(null)
+    // 422 del vínculo: nodos de la ruta que el certificado sí cubre (null si no hubo ese error)
+    var certificateMismatch: CertificateMismatch? by mutableStateOf(null)
 
     // T48: certificado guardado en el teléfono para el nodo abierto (null si no hay)
     var localCertificate: LocalCertificate? by mutableStateOf(null)
@@ -771,6 +774,7 @@ class SkillSwapViewModel : ViewModel() {
     // true si el certificado cubre la habilidad del nodo; si no, errorMessage explica el motivo.
     suspend fun linkCertificate(nodeId: Int): Boolean {
         val certificateId = certificate?.id ?: return false
+        certificateMismatch = null
         return try {
             val response = RetrofitClient.webService.linkCertificate(
                 nodeId, LinkCertificateRequest(certificateId)
@@ -778,12 +782,26 @@ class SkillSwapViewModel : ViewModel() {
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 certificateLink = body
+                certificateMismatch = null
                 body.node?.let { selectedNode = it }
                 true
             } else {
                 errorMessage = when (response.code()) {
                     409 -> "El certificado aún no está verificado. Quedó en revisión"
-                    422 -> messageFrom(response, "El certificado no cubre la habilidad de este nodo")
+                    422 -> {
+                        // El cuerpo solo se puede leer una vez: de él salen el mensaje y los nodos sugeridos
+                        val raw = try {
+                            response.errorBody()?.string()
+                        } catch (e: Exception) {
+                            null
+                        }
+                        certificateMismatch = CertificateMismatch.fromErrorBody(raw)
+                        try {
+                            Gson().fromJson(raw, ApiError::class.java)?.detail
+                        } catch (e: Exception) {
+                            null
+                        } ?: "El certificado no cubre la habilidad de este nodo"
+                    }
                     else -> messageFrom(response, "No se pudo vincular el certificado (${response.code()})")
                 }
                 false
