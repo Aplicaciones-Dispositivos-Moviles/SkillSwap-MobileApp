@@ -240,14 +240,16 @@ class SkillSwapViewModel : ViewModel() {
         return try {
             val response = RetrofitClient.webService.getSkillOptions(SkillOptionsRequest(goalText))
             val body = response.body()
-            if (response.isSuccessful && body != null) {
+            if (response.isSuccessful && body != null && body.isNotEmpty()) {
                 skillOptions = body.sortedByDescending { it.affinity }
                 true
-            } else if (response.code() == 404) {
-                true
+            } else if (response.isSuccessful) {
+                errorMessage = "No encontramos habilidades para esta meta. Cuéntanos qué quieres construir o para qué trabajo"
+                false
             } else {
                 errorMessage = when (response.code()) {
                     400 -> "Escribe tu meta (máximo 500 caracteres)"
+                    409 -> messageFrom(response, "Ya demostraste las habilidades de esta meta. Prueba con una meta más avanzada")
                     422 -> messageFrom(response, "No encontramos habilidades para esta meta. Cuéntanos qué quieres construir o para qué trabajo")
                     else -> messageFrom(response, "No se pudo interpretar tu meta (${response.code()})")
                 }

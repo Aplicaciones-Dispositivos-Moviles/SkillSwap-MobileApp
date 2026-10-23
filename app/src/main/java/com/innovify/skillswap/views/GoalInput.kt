@@ -1,7 +1,6 @@
 package com.innovify.skillswap.views
 
 import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -124,16 +123,10 @@ fun GoalInput(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContr
                         // La red va en hilo IO (como en la plantilla del profe)
                         viewModel.viewModelScope.launch(Dispatchers.IO) {
                             val ok = viewModel.loadSkillOptions(text)
-                            // Sin opciones (el backend aún no las da): la ruta se construye directo
-                            val created = ok && viewModel.skillOptions.isEmpty() && viewModel.declareGoal(context, null)
                             withContext(Dispatchers.Main) {
                                 loading = false
-                                when {
-                                    !ok -> goalError = viewModel.errorMessage // WF-03 #04: reformular la meta
-                                    viewModel.skillOptions.isNotEmpty() -> nav.navigate("SkillConfirmation")
-                                    created -> nav.navigate("Path") { popUpTo(0) }
-                                    else -> Toast.makeText(context, viewModel.errorMessage, Toast.LENGTH_LONG).show()
-                                }
+                                // WF-03 #04: si no hay habilidades afines se pide reformular la meta
+                                if (ok) nav.navigate("SkillConfirmation") else goalError = viewModel.errorMessage
                             }
                         }
                     }
