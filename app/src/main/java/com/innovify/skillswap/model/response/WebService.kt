@@ -6,6 +6,7 @@ import com.innovify.skillswap.model.beans.CreateVerifierProfileRequest
 import com.innovify.skillswap.model.beans.AuthUser
 import com.innovify.skillswap.model.beans.Certificate
 import com.innovify.skillswap.model.beans.CertificateLink
+import com.innovify.skillswap.model.beans.CreditTransaction
 import com.innovify.skillswap.model.beans.DeclareGoalRequest
 import com.innovify.skillswap.model.beans.LearningPath
 import com.innovify.skillswap.model.beans.LinkCertificateRequest
@@ -20,6 +21,7 @@ import com.innovify.skillswap.model.beans.SubmitMiniProjectRequest
 import com.innovify.skillswap.model.beans.VerificationCase
 import com.innovify.skillswap.model.beans.VerificationCaseDetail
 import com.innovify.skillswap.model.beans.UserResource
+import com.innovify.skillswap.model.beans.Wallet
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Response
@@ -129,5 +131,14 @@ interface WebService {
     // 200 VerificationCase | 403 | 404 | 409 no está rechazado, ya se apeló o el nodo tiene otro caso abierto
     @POST("api/v1/verification-cases/{id}/appeal")
     suspend fun appealVerificationCase(@Path("id") id: Int): Response<VerificationCase>
+
+    // Saldo de SkillCredits del usuario (solo el dueño).
+    // 200 Wallet | 403 no es tu billetera | 404 cuentas anteriores a las billeteras
+    @GET("api/v1/wallets/{userId}")
+    suspend fun getWallet(@Path("userId") userId: Int): Response<Wallet>
+
+    // Movimientos de la billetera, del más reciente al más antiguo. 200 | 403 | 404
+    @GET("api/v1/wallets/{userId}/transactions")
+    suspend fun getWalletTransactions(@Path("userId") userId: Int): Response<List<CreditTransaction>>
 
 }
