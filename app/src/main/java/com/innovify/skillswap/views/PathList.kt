@@ -89,6 +89,9 @@ fun PathList(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContro
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.weight(1f)
                 )
+                TextButton(onClick = { nav.navigate("Profile") }) {
+                    Text(text = "Mi billetera")
+                }
                 TextButton(onClick = { viewModel.signOut(context) }) {
                     Text(text = "Salir")
                 }

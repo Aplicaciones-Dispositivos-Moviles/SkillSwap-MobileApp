@@ -15,6 +15,7 @@ import com.innovify.skillswap.model.beans.CreateVerifierProfileRequest
 import com.innovify.skillswap.model.beans.Certificate
 import com.innovify.skillswap.model.beans.CertificateLink
 import com.innovify.skillswap.model.beans.CertificateMismatch
+import com.innovify.skillswap.model.beans.CreditTransaction
 import com.innovify.skillswap.model.beans.DeclareGoalRequest
 import com.innovify.skillswap.model.beans.LearningPath
 import com.innovify.skillswap.model.beans.LocalCertificate
@@ -30,6 +31,7 @@ import com.innovify.skillswap.model.beans.SkillOptionsRequest
 import com.innovify.skillswap.model.beans.SubmitAttemptRequest
 import com.innovify.skillswap.model.beans.SubmitMiniProjectRequest
 import com.innovify.skillswap.model.beans.VerificationCaseDetail
+import com.innovify.skillswap.model.beans.Wallet
 import com.innovify.skillswap.model.client.RetrofitClient
 import com.innovify.skillswap.model.db.SkillSwapDbHelper
 import okhttp3.MediaType
@@ -90,6 +92,8 @@ class SkillSwapViewModel : ViewModel() {
         sessionPrefs(context).edit().remove("user").apply()
         RetrofitClient.token = null
         user = null
+        wallet = null
+        transactions = emptyList()
         path = null
         selectedNode = null
         certificate = null
@@ -287,6 +291,52 @@ class SkillSwapViewModel : ViewModel() {
         } catch (e: Exception) {
             errorMessage = "No se pudo conectar con el servidor"
             false
+        }
+    }
+
+    // ------------------------------------------------------- BILLETERA (solo lectura)
+    // Saldo y movimientos de SkillCredits del usuario; siempre vienen del servidor (no se guardan en SQLite).
+    var wallet: Wallet? by mutableStateOf(null)
+    var transactions: List<CreditTransaction> by mutableStateOf(emptyList())
+
+    // Carga el saldo y los movimientos. true si ambos llegaron; si no, errorMessage dice por qué.
+    suspend fun loadWallet(): Boolean {
+        val userId = user?.id
+        if (userId == null) {
+            errorMessage = "Inicia sesión para ver tu billetera"
+            return false
+        }
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para ver tu billetera"
+            return false
+        }
+        return try {
+            val walletResponse = RetrofitClient.webService.getWallet(userId)
+            val walletBody = walletResponse.body()
+            if (!walletResponse.isSuccessful || walletBody == null) {
+                errorMessage = walletError(walletResponse)
+                return false
+            }
+            val transactionsResponse = RetrofitClient.webService.getWalletTransactions(userId)
+            val transactionsBody = transactionsResponse.body()
+            if (!transactionsResponse.isSuccessful || transactionsBody == null) {
+                errorMessage = walletError(transactionsResponse)
+                return false
+            }
+            wallet = walletBody
+            transactions = transactionsBody
+            true
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
+    private fun walletError(response: Response<*>): String {
+        return when (response.code()) {
+            403 -> "Esta billetera no es tuya"
+            404 -> messageFrom(response, "No encontramos tu billetera")
+            else -> messageFrom(response, "No se pudo cargar tu billetera (${response.code()})")
         }
     }
 
