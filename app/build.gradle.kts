@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -48,6 +49,10 @@ dependencies {
 
     // OCR on-device (ML Kit, modelo de texto latino incluido en la app)
     implementation("com.google.mlkit:text-recognition:16.0.1")
+
+    // Notificaciones push (FCM). La versión de firebase-messaging la pone el BoM
+    implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
+    implementation("com.google.firebase:firebase-messaging")
 
 
     implementation(platform(libs.androidx.compose.bom))
