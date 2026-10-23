@@ -152,32 +152,30 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
                         }
                     }
 
-                    // T50: el quiz se puede rendir con el nodo disponible; el certificado es opcional y el backend
-                    // decide si hace falta (con certificado vinculado el quiz es la acción principal)
-                    if (node.status == "Available") {
-                        if (node.linkedCertificateId != null) {
-                            Button(
-                                onClick = { nav.navigate("Quiz") },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(52.dp)
-                            ) {
-                                Text(text = "Rendir quiz")
-                            }
-                        } else {
-                            OutlinedButton(
-                                onClick = { nav.navigate("Quiz") },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(52.dp)
-                            ) {
-                                Text(text = "Rendir quiz")
-                            }
+                    // Flujo del informe: el certificado vinculado habilita la evaluación práctica del nodo
+                    val evaluationEnabled = node.status == "Available" && node.linkedCertificateId != null
+                    if (node.status == "Available" && !evaluationEnabled) {
+                        Text(
+                            text = "Sube tu certificado para habilitar el quiz y el proyecto de este nodo.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary
+                        )
+                    }
+
+                    // T50: el quiz aparece solo cuando el certificado ya quedó vinculado al nodo
+                    if (evaluationEnabled) {
+                        Button(
+                            onClick = { nav.navigate("Quiz") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                        ) {
+                            Text(text = "Rendir quiz")
                         }
                     }
 
-                    // T55: el proyecto se puede abrir con el nodo disponible (el backend decide si corresponde)
-                    if (node.status == "Available") {
+                    // T55: el proyecto también espera al certificado vinculado
+                    if (evaluationEnabled) {
                         OutlinedButton(
                             onClick = { nav.navigate("Project") },
                             modifier = Modifier
