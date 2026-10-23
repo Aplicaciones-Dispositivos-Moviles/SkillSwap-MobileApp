@@ -215,10 +215,10 @@ fun QuizResult(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
             // Un intento fallido abre un caso de verificación (o agota las escalaciones del plan)
             result.verificationCaseId?.let { caseId ->
                 NoticeCard(
-                    text = "Abrimos el caso #$caseId: un Verificador revisará tu intento" +
-                        (result.verificationCaseStatus?.let { " (estado: $it)." } ?: "."),
+                    text = "Abrimos un caso: un Verificador revisará tu intento.",
                     tint = SkillBlue,
                     container = SkillBlueContainer,
+                    status = result.verificationCaseStatus,
                     // WF-08: desde aquí el Estudiante ve el estado del caso y las preguntas que falló
                     actionLabel = "Ver estado del caso",
                     onAction = {
@@ -311,6 +311,7 @@ private fun NoticeCard(
     text: String,
     tint: Color,
     container: Color,
+    status: String? = null,
     actionLabel: String? = null,
     onAction: () -> Unit = {}
 ) {
@@ -327,6 +328,18 @@ private fun NoticeCard(
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(start = 12.dp)
             )
+        }
+        // Estado del caso con color: pendiente en amarillo, en revisión en azul, resuelto en verde
+        val look = when (status) {
+            "Pending" -> Triple("Pendiente", Warning, WarningContainer)
+            "Assigned" -> Triple("En revisión", SkillBlue, Color.White)
+            "Resolved" -> Triple("Resuelto", Success, SuccessContainer)
+            else -> null
+        }
+        if (look != null) {
+            Row(modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)) {
+                StatusChip(text = look.first, color = look.second, container = look.third)
+            }
         }
         if (actionLabel != null) {
             TextButton(onClick = onAction, modifier = Modifier.padding(start = 8.dp)) {
