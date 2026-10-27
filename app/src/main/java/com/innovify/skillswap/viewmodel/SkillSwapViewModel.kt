@@ -158,6 +158,7 @@ class SkillSwapViewModel : ViewModel() {
     }
 
     suspend fun signIn(username: String, password: String, context: Context): Boolean {
+        credentialsRejected = false
         return try {
             val response = RetrofitClient.webService.signIn(SignInRequest(username, password))
             val body = response.body()
@@ -168,7 +169,10 @@ class SkillSwapViewModel : ViewModel() {
                 true
             } else {
                 errorMessage = when (response.code()) {
-                    401 -> "Usuario o contraseña incorrectos"
+                    401 -> {
+                        credentialsRejected = true
+                        "Usuario o contraseña incorrectos"
+                    }
                     403 -> "Verifica tu correo institucional antes de ingresar"
                     else -> "No se pudo iniciar sesión (${response.code()})"
                 }
@@ -295,6 +299,33 @@ class SkillSwapViewModel : ViewModel() {
                 }
                 false
             }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
+    // ------------------------------------------------------ ACCESO BIOMÉTRICO (US03)
+    // true si el último signIn fue rechazado por usuario o contraseña (401)
+    var credentialsRejected = false
+
+    // true si este usuario tiene el acceso con huella o rostro activado en este teléfono
+    var biometricEnabled: Boolean by mutableStateOf(false)
+
+    fun refreshBiometric(context: Context) {
+        biometricEnabled = BiometricVault.isEnabled(context, user?.username)
+    }
+
+    // Comprueba la contraseña del usuario con sesión iniciada, sin cambiar la sesión (al activar la biometría).
+    suspend fun checkPassword(password: String): Boolean {
+        val username = user?.username ?: return false
+        return try {
+            val response = RetrofitClient.webService.signIn(SignInRequest(username, password))
+            if (!response.isSuccessful) {
+                errorMessage = if (response.code() == 401) "La contraseña no es correcta"
+                else "No se pudo verificar la contraseña (${response.code()})"
+            }
+            response.isSuccessful
         } catch (e: Exception) {
             errorMessage = "No se pudo conectar con el servidor"
             false
