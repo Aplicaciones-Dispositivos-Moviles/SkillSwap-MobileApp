@@ -54,6 +54,9 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
     implementation("com.google.firebase:firebase-messaging")
 
+    // Acceso con huella o rostro (BiometricPrompt)
+    implementation("androidx.biometric:biometric:1.1.0")
+
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

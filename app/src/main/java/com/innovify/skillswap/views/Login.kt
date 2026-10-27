@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,9 +35,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.innovify.skillswap.ui.theme.SkillBlue
+import com.innovify.skillswap.viewmodel.BiometricVault
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -50,6 +53,41 @@ fun Login(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControlle
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
+    // US03: el botón de huella o rostro solo aparece si el teléfono lo soporta y el usuario lo activó
+    var biometricReady by remember {
+        mutableStateOf(BiometricVault.isAvailable(context) && BiometricVault.isEnabled(context))
+    }
+
+    fun signInWithBiometric() {
+        val activity = context as? FragmentActivity ?: return
+        BiometricVault.unlock(activity,
+            onSuccess = { savedUser, savedPassword ->
+                loading = true
+                // La red va en hilo IO (como en la plantilla del profe)
+                viewModel.viewModelScope.launch(Dispatchers.IO) {
+                    val ok = viewModel.signIn(savedUser, savedPassword, context)
+                    withContext(Dispatchers.Main) {
+                        loading = false
+                        if (ok) {
+                            nav.navigate("Path") { popUpTo("Login") { inclusive = true } }
+                        } else if (viewModel.credentialsRejected) {
+                            // La contraseña cambió: el acceso guardado ya no sirve
+                            BiometricVault.disable(context)
+                            biometricReady = false
+                            Toast.makeText(
+                                context,
+                                "Tu contraseña cambió. Entra con ella y vuelve a activar el acceso biométrico",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            Toast.makeText(context, viewModel.errorMessage, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            },
+            onError = { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+        )
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -156,6 +194,27 @@ fun Login(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControlle
             Text(
                 text = if (loading) "Ingresando…" else "Iniciar sesión",
                 style = MaterialTheme.typography.labelLarge
+            )
+        }
+        if (biometricReady) {
+            OutlinedButton(
+                enabled = !loading,
+                onClick = { signInWithBiometric() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp)
+                    .height(52.dp)
+            ) {
+                Text(
+                    text = "Entrar con huella o rostro",
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+            Text(
+                text = "Cuenta: ${BiometricVault.savedUsername(context) ?: ""}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
         if (loading) {

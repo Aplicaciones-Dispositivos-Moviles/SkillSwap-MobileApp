@@ -1,6 +1,14 @@
 package com.innovify.skillswap.views
 
 import android.content.Context
+import android.widget.Toast
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.fragment.app.FragmentActivity
+import com.innovify.skillswap.viewmodel.BiometricVault
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -64,6 +72,71 @@ fun Profile(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControl
 
     LaunchedEffect(Unit) { load() }
 
+    // US03: activar o quitar el acceso con huella o rostro
+    val biometricAvailable = remember { BiometricVault.isAvailable(context) }
+    var askPassword by remember { mutableStateOf(false) }
+    var password by remember { mutableStateOf("") }
+    var checking by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { viewModel.refreshBiometric(context) }
+
+    if (askPassword) {
+        AlertDialog(
+            onDismissRequest = { if (!checking) askPassword = false },
+            title = { Text(text = "Activar acceso biométrico") },
+            text = {
+                Column {
+                    Text(
+                        text = "Escribe tu contraseña una vez. Se guarda cifrada en este teléfono y solo se abre con tu huella o rostro.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    OutlinedTextField(
+                        value = password,
+                        singleLine = true,
+                        enabled = !checking,
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp),
+                        onValueChange = { password = it }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !checking && password.isNotBlank(),
+                    onClick = {
+                        checking = true
+                        // La red va en hilo IO (como en la plantilla del profe)
+                        viewModel.viewModelScope.launch(Dispatchers.IO) {
+                            val ok = viewModel.checkPassword(password)
+                            withContext(Dispatchers.Main) {
+                                checking = false
+                                val activity = context as? FragmentActivity
+                                if (!ok) {
+                                    Toast.makeText(context, viewModel.errorMessage, Toast.LENGTH_LONG).show()
+                                } else if (activity != null) {
+                                    askPassword = false
+                                    BiometricVault.enable(
+                                        activity, viewModel.user?.username ?: "", password,
+                                        onDone = {
+                                            viewModel.biometricEnabled = true
+                                            Toast.makeText(context, "Acceso biométrico activado", Toast.LENGTH_SHORT).show()
+                                        },
+                                        onError = { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+                                    )
+                                    password = ""
+                                }
+                            }
+                        }
+                    }
+                ) { Text(text = if (checking) "Verificando…" else "Continuar") }
+            },
+            dismissButton = {
+                TextButton(enabled = !checking, onClick = { askPassword = false }) { Text(text = "Cancelar") }
+            }
+        )
+    }
+
     val wallet = viewModel.wallet
     val transactions = viewModel.transactions
 
@@ -72,7 +145,7 @@ fun Profile(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControl
         contentPadding = PaddingValues(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
         item {
-            ScreenTopBar(title = "Mi billetera", onBack = { nav.popBackStack() })
+            ScreenTopBar(title = "Mi perfil", onBack = { nav.popBackStack() })
             OfflineBanner(viewModel)
             Column(modifier = Modifier.padding(start = 8.dp)) {
                 Text(
@@ -83,6 +156,42 @@ fun Profile(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControl
                     text = viewModel.user?.email ?: "",
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary
+                )
+            }
+        }
+
+        item {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp, top = 24.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = "Entrar con huella o rostro", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        text = if (biometricAvailable) "Inicia sesión sin escribir tu contraseña."
+                        else "Tu dispositivo no tiene huella ni rostro configurados. Sigues entrando con tu contraseña.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary
+                    )
+                }
+                Switch(
+                    checked = viewModel.biometricEnabled,
+                    onCheckedChange = { wantsOn ->
+                        if (!wantsOn) {
+                            BiometricVault.disable(context)
+                            viewModel.biometricEnabled = false
+                            Toast.makeText(context, "Acceso biométrico desactivado", Toast.LENGTH_SHORT).show()
+                        } else if (!biometricAvailable) {
+                            Toast.makeText(
+                                context, "El acceso biométrico no está disponible en este dispositivo", Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            password = ""
+                            askPassword = true
+                        }
+                    }
                 )
             }
         }
