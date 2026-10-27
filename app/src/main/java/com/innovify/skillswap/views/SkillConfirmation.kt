@@ -40,6 +40,8 @@ import com.innovify.skillswap.ui.theme.NeutralSurface
 import com.innovify.skillswap.ui.theme.SkillBlue
 import com.innovify.skillswap.ui.theme.SkillBlueContainer
 import com.innovify.skillswap.ui.theme.TextSecondary
+import com.innovify.skillswap.ui.theme.Warning
+import com.innovify.skillswap.ui.theme.WarningContainer
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -53,6 +55,8 @@ fun SkillConfirmation(viewModel: SkillSwapViewModel, context: Context, nav: NavH
     // Por defecto queda elegida la de mayor afinidad (la primera)
     var selectedTag by rememberSaveable { mutableStateOf(options.firstOrNull()?.skillTag) }
     var creating by remember { mutableStateOf(false) }
+    // Mensaje del 409 PlanLimitReached: se muestra como tarjeta con "Ver mi plan"
+    var limitMessage by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -111,10 +115,36 @@ fun SkillConfirmation(viewModel: SkillSwapViewModel, context: Context, nav: NavH
                 Text(text = "¿Ninguna se ajusta? Reformular mi meta")
             }
 
+            if (limitMessage != null) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = WarningContainer),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(text = "Llegaste al límite de tu plan", style = MaterialTheme.typography.titleSmall, color = Warning)
+                        Text(
+                            text = limitMessage ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                        Button(
+                            onClick = { nav.navigate("MyPlan") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp)
+                                .height(52.dp)
+                        ) { Text(text = "Ver mi plan") }
+                    }
+                }
+            }
+
             Button(
                 enabled = selectedTag != null && !creating && viewModel.connectivity.isOnline,
                 onClick = {
                     creating = true
+                    limitMessage = null
                     // La red va en hilo IO (como en la plantilla del profe)
                     viewModel.viewModelScope.launch(Dispatchers.IO) {
                         val ok = viewModel.declareGoal(context, selectedTag)
@@ -123,6 +153,8 @@ fun SkillConfirmation(viewModel: SkillSwapViewModel, context: Context, nav: NavH
                             if (ok) {
                                 // WF-03 #03: la ruta generada reemplaza todo el flujo de la meta
                                 nav.navigate("Path") { popUpTo(0) }
+                            } else if (viewModel.planLimitMessage != null) {
+                                limitMessage = viewModel.planLimitMessage
                             } else {
                                 Toast.makeText(context, viewModel.errorMessage, Toast.LENGTH_LONG).show()
                             }
