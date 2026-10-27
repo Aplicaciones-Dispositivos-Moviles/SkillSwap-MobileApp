@@ -2,4 +2,6 @@
 <paths>
     <!-- Fotos de certificados: cacheDir/certificates/ -->
     <cache-path name="certificates" path="certificates/" />
+    <!-- Videos de la demostración final: cacheDir/demonstrations/ -->
+    <cache-path name="demonstrations" path="demonstrations/" />
 </paths>

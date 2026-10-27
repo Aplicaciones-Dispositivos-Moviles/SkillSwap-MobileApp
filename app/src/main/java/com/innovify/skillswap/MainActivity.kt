@@ -42,6 +42,10 @@ class MainActivity : FragmentActivity() {
     // Los datos del push (type, caseId…) llegan como extras del Intent
     private fun openFromNotification(intent: Intent?) {
         val type = intent?.getStringExtra("type") ?: return
-        viewModel.openFromNotification(type, intent.getStringExtra("caseId")?.toIntOrNull())
+        viewModel.openFromNotification(
+            type,
+            intent.getStringExtra("caseId")?.toIntOrNull(),
+            intent.getStringExtra("demonstrationId")?.toIntOrNull()
+        )
     }
 }
