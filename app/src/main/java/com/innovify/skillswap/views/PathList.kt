@@ -179,6 +179,18 @@ fun PathList(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContro
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
+                // US28: con todos los nodos completados se puede programar la demostración final
+                if (path.status == "Completed" || (nodes.isNotEmpty() && done == nodes.size)) {
+                    Button(
+                        onClick = { nav.navigate("Demonstration") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp)
+                            .height(52.dp)
+                    ) {
+                        Text(text = "Demostración final")
+                    }
+                }
                 Text(
                     text = "Tu ruta",
                     style = MaterialTheme.typography.titleMedium,

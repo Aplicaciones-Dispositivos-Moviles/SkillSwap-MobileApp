@@ -16,6 +16,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import com.innovify.skillswap.views.CaseStatus
+import com.innovify.skillswap.views.Demonstration
+import com.innovify.skillswap.views.DemonstrationVideo
 import com.innovify.skillswap.views.Profile
 import com.innovify.skillswap.views.CertificateCapture
 import com.innovify.skillswap.views.GoalInput
@@ -107,6 +109,8 @@ fun NavSkillSwap(viewModel: SkillSwapViewModel, context: Context) {
         composable("Project") { ProjectDelivery(viewModel, context, recordarPantalla) }
         composable("CaseStatus") { CaseStatus(viewModel, context, recordarPantalla) }
         composable("Profile") { Profile(viewModel, context, recordarPantalla) }
+        composable("Demonstration") { Demonstration(viewModel, context, recordarPantalla) }
+        composable("DemonstrationVideo") { DemonstrationVideo(viewModel, context, recordarPantalla) }
 
     }
 
