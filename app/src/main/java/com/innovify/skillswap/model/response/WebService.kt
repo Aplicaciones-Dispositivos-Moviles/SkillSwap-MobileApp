@@ -9,10 +9,13 @@ import com.innovify.skillswap.model.beans.CertificateLink
 import com.innovify.skillswap.model.beans.CreditTransaction
 import com.innovify.skillswap.model.beans.DeclareGoalRequest
 import com.innovify.skillswap.model.beans.DeviceTokenRequest
+import com.innovify.skillswap.model.beans.FinalDemonstration
 import com.innovify.skillswap.model.beans.LearningPath
 import com.innovify.skillswap.model.beans.LinkCertificateRequest
 import com.innovify.skillswap.model.beans.MiniProject
 import com.innovify.skillswap.model.beans.MiniProjectSubmission
+import com.innovify.skillswap.model.beans.RescheduleDemonstrationRequest
+import com.innovify.skillswap.model.beans.ScheduleDemonstrationRequest
 import com.innovify.skillswap.model.beans.SignInRequest
 import com.innovify.skillswap.model.beans.SignUpRequest
 import com.innovify.skillswap.model.beans.SkillOption
@@ -30,6 +33,7 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.PATCH
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -153,5 +157,34 @@ interface WebService {
     // Authorization porque al cerrar sesión el token global ya se limpió.
     @DELETE("api/v1/users/me/device-token")
     suspend fun removeDeviceToken(@Header("Authorization") authorization: String): Response<ResponseBody>
+
+    // Programa la demostración final de una ruta completada (al menos 24 h adelante); el backend asigna un Verificador.
+    // 201 | 400 | 403 | 404 | 409 (ruta sin completar, falta menos de 24 h, sin Verificador libre o ya hay una)
+    @POST("api/v1/final-demonstrations")
+    suspend fun scheduleDemonstration(@Body body: ScheduleDemonstrationRequest): Response<FinalDemonstration>
+
+    // Las demostraciones del Estudiante, la más reciente primero
+    @GET("api/v1/final-demonstrations/me")
+    suspend fun getMyDemonstrations(): Response<List<FinalDemonstration>>
+
+    // Mueve una demostración programada a otro momento (al menos 24 h adelante). 200 | 400 | 403 | 404 | 409
+    @PATCH("api/v1/final-demonstrations/{id}/reschedule")
+    suspend fun rescheduleDemonstration(
+        @Path("id") id: Int,
+        @Body body: RescheduleDemonstrationRequest
+    ): Response<FinalDemonstration>
+
+    // Cancela una demostración programada. 200 | 403 | 404 | 409
+    @PATCH("api/v1/final-demonstrations/{id}/cancel")
+    suspend fun cancelDemonstration(@Path("id") id: Int): Response<FinalDemonstration>
+
+    // Sube (o reemplaza) el video en la parte "file": MP4, WebM o QuickTime, hasta 25 MB.
+    // 200 estado VideoSubmitted | 400 | 403 | 404 | 409 | 413 | 415 | 502
+    @Multipart
+    @POST("api/v1/final-demonstrations/{id}/video")
+    suspend fun uploadDemonstrationVideo(
+        @Path("id") id: Int,
+        @Part file: MultipartBody.Part
+    ): Response<FinalDemonstration>
 
 }
