@@ -11,6 +11,10 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import com.innovify.skillswap.model.beans.ApiError
+import com.innovify.skillswap.model.beans.AttachEvidenceRequest
+import com.innovify.skillswap.model.beans.PlanSubscription
+import com.innovify.skillswap.model.beans.StudentPlan
+import com.innovify.skillswap.model.beans.UpdateInterestsRequest
 import com.innovify.skillswap.model.beans.AssessmentAttempt
 import com.innovify.skillswap.model.beans.AssessmentBlueprint
 import com.innovify.skillswap.model.beans.AuthUser
@@ -106,6 +110,9 @@ class SkillSwapViewModel : ViewModel() {
         user = null
         wallet = null
         transactions = emptyList()
+        plan = null
+        planLimitMessage = null
+        interests = emptyList()
         path = null
         selectedNode = null
         certificate = null
@@ -284,6 +291,7 @@ class SkillSwapViewModel : ViewModel() {
     // Construye la ruta con la habilidad confirmada (null = el backend interpreta la meta).
     // true si se creó; la nueva ruta queda en path y en SQLite.
     suspend fun declareGoal(context: Context, skillTag: String?): Boolean {
+        planLimitMessage = null
         return try {
             val response = RetrofitClient.webService.declareGoal(DeclareGoalRequest(goal, skillTag))
             val body = response.body()
@@ -298,7 +306,12 @@ class SkillSwapViewModel : ViewModel() {
                 true
             } else {
                 errorMessage = when (response.code()) {
-                    409 -> messageFrom(response, "No se pudo crear la ruta con tu plan actual")
+                    409 -> {
+                        // 409 PlanLimitReached: la pantalla muestra una tarjeta con "Ver mi plan" en vez de un Toast
+                        val message = messageFrom(response, "Alcanzaste el límite de rutas de tu plan")
+                        planLimitMessage = message
+                        message
+                    }
                     422 -> messageFrom(response, "No encontramos habilidades para esta meta")
                     else -> messageFrom(response, "No se pudo crear la ruta (${response.code()})")
                 }
@@ -519,6 +532,156 @@ class SkillSwapViewModel : ViewModel() {
                 "Demonstration"
             }
             else -> null
+        }
+    }
+
+    // ------------------------------------------------------------- MI PLAN (US05)
+    var plan: StudentPlan? by mutableStateOf(null)
+
+    // Mensaje del 409 PlanLimitReached al declarar una meta (null si no ocurrió)
+    var planLimitMessage: String? by mutableStateOf(null)
+
+    // Lee el plan y sus límites. true si llegaron; si no, errorMessage dice por qué.
+    suspend fun loadPlan(): Boolean {
+        val userId = user?.id
+        if (userId == null) {
+            errorMessage = "Inicia sesión para ver tu plan"
+            return false
+        }
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para ver tu plan"
+            return false
+        }
+        return try {
+            val response = RetrofitClient.webService.getPlan(userId)
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                plan = body
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    403 -> "Este plan no es tuyo"
+                    else -> messageFrom(response, "No se pudo cargar tu plan (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
+    // Activa Premium (cobro simulado en el servidor) y vuelve a leer el plan. true si quedó activo.
+    suspend fun subscribe(): Boolean {
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para activar Premium"
+            return false
+        }
+        return try {
+            val response = RetrofitClient.webService.subscribe()
+            if (response.isSuccessful) {
+                loadPlan()
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    400 -> "El producto de pago no es válido"
+                    422 -> "No encontramos una compra activa. Intenta de nuevo"
+                    503 -> "El servicio de pagos no responde. Intenta en unos minutos"
+                    else -> messageFrom(response, "No se pudo activar Premium (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
+    // Cancela la renovación: el plan sigue hasta el fin del periodo pagado. true si se canceló.
+    suspend fun cancelSubscription(): Boolean {
+        val subscription = plan?.subscription
+        if (subscription == null) {
+            errorMessage = "No tienes una suscripción activa"
+            return false
+        }
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para cancelar"
+            return false
+        }
+        return try {
+            val response = RetrofitClient.webService.cancelSubscription(subscription.id)
+            if (response.isSuccessful) {
+                loadPlan()
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    403 -> "Esta suscripción no es tuya"
+                    404 -> "No encontramos la suscripción"
+                    409 -> "Tu suscripción ya venció"
+                    503 -> "El servicio de pagos no responde. No se cambió nada, intenta en unos minutos"
+                    else -> messageFrom(response, "No se pudo cancelar (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
+    // ------------------------------------------------------- INTERESES (US04)
+    var interests: List<String> by mutableStateOf(emptyList())
+
+    // Lee los intereses guardados del usuario. true si llegaron.
+    suspend fun loadInterests(): Boolean {
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para ver tus intereses"
+            return false
+        }
+        return try {
+            val response = RetrofitClient.webService.getCurrentUser()
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                interests = body.interests ?: emptyList()
+                true
+            } else {
+                errorMessage = messageFrom(response, "No se pudieron cargar tus intereses (${response.code()})")
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
+    // Guarda los intereses (reemplaza los anteriores). true si se guardaron.
+    suspend fun saveInterests(topics: List<String>, description: String): Boolean {
+        val userId = user?.id
+        if (userId == null) {
+            errorMessage = "Inicia sesión para guardar tus intereses"
+            return false
+        }
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para guardar tus intereses"
+            return false
+        }
+        return try {
+            val response = RetrofitClient.webService.updateInterests(
+                userId, UpdateInterestsRequest(topics, description.trim().ifEmpty { null })
+            )
+            if (response.isSuccessful) {
+                interests = response.body()?.interests ?: topics
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    403 -> "No puedes cambiar los intereses de otra cuenta"
+                    else -> messageFrom(response, "No se pudieron guardar tus intereses (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
         }
     }
 
@@ -944,6 +1107,34 @@ class SkillSwapViewModel : ViewModel() {
                     403 -> "Este caso no es tuyo"
                     404 -> "No encontramos ese caso"
                     else -> messageFrom(response, "No se pudo cargar el caso (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
+    // US26: adjunta (o reemplaza) el enlace de evidencia de un caso abierto. true si se guardó.
+    suspend fun attachEvidence(caseId: Int, url: String): Boolean {
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para adjuntar la evidencia"
+            return false
+        }
+        return try {
+            val response = RetrofitClient.webService.attachEvidence(caseId, AttachEvidenceRequest(url.trim()))
+            val body = response.body()
+            if (response.isSuccessful) {
+                if (body != null) caseDetail = caseDetail?.copy(verificationCase = body)
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    400 -> "El enlace debe empezar con http:// o https://"
+                    403 -> "Este caso no es tuyo"
+                    404 -> "No encontramos ese caso"
+                    409 -> "El caso ya fue resuelto: no se puede adjuntar más evidencia"
+                    else -> messageFrom(response, "No se pudo adjuntar la evidencia (${response.code()})")
                 }
                 false
             }

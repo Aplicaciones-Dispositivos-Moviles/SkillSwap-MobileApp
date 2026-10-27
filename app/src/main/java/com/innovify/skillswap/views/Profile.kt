@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -193,6 +194,28 @@ fun Profile(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControl
                         }
                     }
                 )
+            }
+        }
+
+        item {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp, top = 16.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { nav.navigate("MyPlan") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                ) { Text(text = "Mi plan") }
+                OutlinedButton(
+                    onClick = { nav.navigate("Interests") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                ) { Text(text = "Mis intereses") }
             }
         }
 

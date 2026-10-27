@@ -21,7 +21,8 @@ data class UserResource(
     var username: String,
     var email: String,
     var role: String,
-    @SerializedName("isVerified") var isVerified: Boolean
+    @SerializedName("isVerified") var isVerified: Boolean,
+    var interests: List<String>? = null
 )
 
 // Respuesta de sign-in (AuthenticatedUserResource del backend)

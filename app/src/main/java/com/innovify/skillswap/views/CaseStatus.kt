@@ -19,6 +19,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.innovify.skillswap.model.beans.VerificationCase
+import com.innovify.skillswap.model.beans.isHttpUrl
 import com.innovify.skillswap.ui.theme.Error
 import com.innovify.skillswap.ui.theme.ErrorContainer
 import com.innovify.skillswap.ui.theme.NeutralSurface
@@ -82,6 +84,9 @@ fun CaseStatus(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
     var loading by remember { mutableStateOf(true) }
     var appealing by remember { mutableStateOf(false) }
     var confirmAppeal by remember { mutableStateOf(false) }
+    var evidenceUrl by remember { mutableStateOf("") }
+    var evidenceError by remember { mutableStateOf<String?>(null) }
+    var attaching by remember { mutableStateOf(false) }
 
     // Lee el caso del backend (la red va en hilo IO, como en la plantilla del profe)
     fun load() {
@@ -221,6 +226,77 @@ fun CaseStatus(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
                                 }
                             }
                         }
+                    }
+                }
+
+                // US26: evidencia adicional (repositorio o portafolio) mientras el caso siga abierto
+                if (case.status != "Resolved") {
+                    Text(
+                        text = "Evidencia adicional",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(top = 24.dp, bottom = 4.dp)
+                    )
+                    Text(
+                        text = if (case.caseType == "MiniProject")
+                            "Pega el enlace de un repositorio o portafolio. Reemplaza el enlace entregado."
+                        else "Pega el enlace de un repositorio o portafolio que respalde tu entrega.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary
+                    )
+                    if (case.caseType != "MiniProject" && !case.evidenceUrl.isNullOrBlank()) {
+                        Text(
+                            text = "Adjunto actual: ${case.evidenceUrl}",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                    OutlinedTextField(
+                        value = evidenceUrl,
+                        label = { Text(text = "https://…") },
+                        singleLine = true,
+                        enabled = !attaching,
+                        isError = evidenceError != null,
+                        supportingText = { if (evidenceError != null) Text(text = evidenceError ?: "") },
+                        onValueChange = {
+                            evidenceUrl = it
+                            evidenceError = null
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    )
+                    OutlinedButton(
+                        enabled = !attaching && viewModel.connectivity.isOnline,
+                        onClick = {
+                            if (!isHttpUrl(evidenceUrl)) {
+                                evidenceError = "El enlace debe empezar con http:// o https://"
+                            } else if (caseId != null) {
+                                attaching = true
+                                viewModel.viewModelScope.launch(Dispatchers.IO) {
+                                    val ok = viewModel.attachEvidence(caseId, evidenceUrl)
+                                    withContext(Dispatchers.Main) {
+                                        attaching = false
+                                        if (ok) evidenceUrl = ""
+                                        Toast.makeText(
+                                            context,
+                                            if (ok) "Evidencia adjuntada" else viewModel.errorMessage,
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        Text(
+                            text = when {
+                                attaching -> "Adjuntando…"
+                                !viewModel.connectivity.isOnline -> "Necesitas internet para adjuntar"
+                                else -> "Adjuntar enlace"
+                            }
+                        )
                     }
                 }
 
