@@ -2,6 +2,10 @@ package com.innovify.skillswap.model.response
 
 import com.innovify.skillswap.model.beans.AssessmentAttempt
 import com.innovify.skillswap.model.beans.AssessmentBlueprint
+import com.innovify.skillswap.model.beans.AttachEvidenceRequest
+import com.innovify.skillswap.model.beans.PlanSubscription
+import com.innovify.skillswap.model.beans.StudentPlan
+import com.innovify.skillswap.model.beans.UpdateInterestsRequest
 import com.innovify.skillswap.model.beans.CreateVerifierProfileRequest
 import com.innovify.skillswap.model.beans.AuthUser
 import com.innovify.skillswap.model.beans.Certificate
@@ -139,6 +143,32 @@ interface WebService {
     // 200 VerificationCase | 403 | 404 | 409 no está rechazado, ya se apeló o el nodo tiene otro caso abierto
     @POST("api/v1/verification-cases/{id}/appeal")
     suspend fun appealVerificationCase(@Path("id") id: Int): Response<VerificationCase>
+
+    // US26: adjunta (o reemplaza) el enlace de evidencia mientras el caso no esté resuelto.
+    // 200 VerificationCase | 400 no es http/https | 403 | 404 | 409 ya resuelto
+    @PUT("api/v1/verification-cases/{id}/evidence")
+    suspend fun attachEvidence(@Path("id") id: Int, @Body body: AttachEvidenceRequest): Response<VerificationCase>
+
+    // US05: plan vigente (Free o Premium), sus límites y la suscripción. 200 | 403
+    @GET("api/v1/subscriptions/{studentId}")
+    suspend fun getPlan(@Path("studentId") studentId: Int): Response<StudentPlan>
+
+    // Compra Premium sin productId: el cobro simulado usa el producto mensual por defecto.
+    // 201 | 400 producto inválido | 422 sin compra activa | 503 el cobro no respondió
+    @POST("api/v1/subscriptions")
+    suspend fun subscribe(): Response<PlanSubscription>
+
+    // Cancela la renovación; el plan sigue hasta el fin del periodo pagado. 200 | 403 | 404 | 409 ya venció | 503
+    @PATCH("api/v1/subscriptions/{id}/cancel")
+    suspend fun cancelSubscription(@Path("id") id: Int): Response<PlanSubscription>
+
+    // US04: usuario autenticado (trae sus intereses)
+    @GET("api/v1/users/me")
+    suspend fun getCurrentUser(): Response<UserResource>
+
+    // US04: reemplaza los intereses. 200 UserResource | 400 | 403
+    @PUT("api/v1/users/{id}/interests")
+    suspend fun updateInterests(@Path("id") id: Int, @Body body: UpdateInterestsRequest): Response<UserResource>
 
     // Saldo de SkillCredits del usuario (solo el dueño).
     // 200 Wallet | 403 no es tu billetera | 404 cuentas anteriores a las billeteras
