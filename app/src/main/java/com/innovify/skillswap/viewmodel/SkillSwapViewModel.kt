@@ -21,6 +21,10 @@ import com.innovify.skillswap.model.beans.CertificateMismatch
 import com.innovify.skillswap.model.beans.CreditTransaction
 import com.innovify.skillswap.model.beans.DeclareGoalRequest
 import com.innovify.skillswap.model.beans.DeviceTokenRequest
+import com.innovify.skillswap.model.beans.FinalDemonstration
+import com.innovify.skillswap.model.beans.MAX_VIDEO_BYTES
+import com.innovify.skillswap.model.beans.RescheduleDemonstrationRequest
+import com.innovify.skillswap.model.beans.ScheduleDemonstrationRequest
 import com.innovify.skillswap.model.beans.LearningPath
 import com.innovify.skillswap.model.beans.LocalCertificate
 import com.innovify.skillswap.model.beans.MiniProject
@@ -46,6 +50,7 @@ import kotlinx.coroutines.launch
 import okhttp3.RequestBody
 import retrofit2.Response
 import java.io.File
+import java.time.Instant
 
 class SkillSwapViewModel : ViewModel() {
 
@@ -305,6 +310,132 @@ class SkillSwapViewModel : ViewModel() {
         }
     }
 
+    // ------------------------------------------------ DEMOSTRACIÓN FINAL (US28 y US29)
+    // La demostración vigente de la ruta actual (null si no hay ninguna activa)
+    var demonstration: FinalDemonstration? by mutableStateOf(null)
+
+    // id que llega en el push (FinalDemonstrationApproved o Rejected); la pantalla lo usa una vez
+    var selectedDemonstrationId: Int? = null
+
+    // Carga las demostraciones del Estudiante y se queda con la del push o, si no, la de la ruta actual
+    suspend fun loadDemonstration(): Boolean {
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para ver tu demostración final"
+            return false
+        }
+        return try {
+            val response = RetrofitClient.webService.getMyDemonstrations()
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                val wanted = selectedDemonstrationId
+                selectedDemonstrationId = null
+                demonstration = body.firstOrNull { it.id == wanted }
+                    ?: body.firstOrNull { it.learningPathId == path?.id && it.status != "Cancelled" }
+                true
+            } else {
+                errorMessage = messageFrom(response, "No se pudo cargar tu demostración (${response.code()})")
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
+    suspend fun scheduleDemonstration(modality: String, scheduledAt: Instant): Boolean {
+        val pathId = path?.id
+        if (pathId == null) {
+            errorMessage = "Necesitas una ruta completada para programar la demostración"
+            return false
+        }
+        return demonstrationCall {
+            RetrofitClient.webService.scheduleDemonstration(
+                ScheduleDemonstrationRequest(pathId, modality, scheduledAt.toString())
+            )
+        }
+    }
+
+    suspend fun rescheduleDemonstration(scheduledAt: Instant): Boolean {
+        val id = demonstration?.id ?: return false
+        return demonstrationCall {
+            RetrofitClient.webService.rescheduleDemonstration(id, RescheduleDemonstrationRequest(scheduledAt.toString()))
+        }
+    }
+
+    suspend fun cancelDemonstration(): Boolean {
+        val id = demonstration?.id ?: return false
+        val ok = demonstrationCall { RetrofitClient.webService.cancelDemonstration(id) }
+        if (ok) demonstration = null // cancelada: la ruta queda libre para programar otra
+        return ok
+    }
+
+    // Sube (o reemplaza) el video grabado. true si el backend lo recibió (estado VideoSubmitted).
+    suspend fun uploadDemonstrationVideo(file: File): Boolean {
+        val id = demonstration?.id
+        if (id == null) {
+            errorMessage = "Primero programa tu demostración"
+            return false
+        }
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para subir el video"
+            return false
+        }
+        if (!file.exists() || file.length() == 0L) {
+            errorMessage = "No se encontró el video grabado"
+            return false
+        }
+        if (file.length() > MAX_VIDEO_BYTES) {
+            errorMessage = "El video pesa más de 25 MB. Graba uno más corto"
+            return false
+        }
+        return try {
+            val body = RequestBody.create(MediaType.parse("video/mp4"), file)
+            val part = MultipartBody.Part.createFormData("file", file.name, body)
+            val response = RetrofitClient.webService.uploadDemonstrationVideo(id, part)
+            val result = response.body()
+            if (response.isSuccessful && result != null) {
+                demonstration = result
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    403 -> "Esta demostración no es tuya"
+                    409 -> messageFrom(response, "La demostración ya fue revisada o cancelada")
+                    413 -> "El video pesa más de 25 MB. Graba uno más corto"
+                    415 -> "El video debe ser MP4, WebM o QuickTime"
+                    502 -> "No se pudo guardar el video. Intenta de nuevo"
+                    else -> messageFrom(response, "No se pudo subir el video (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
+    // Ejecuta una acción sobre la demostración y deja en demonstration la respuesta del backend
+    private suspend fun demonstrationCall(call: suspend () -> Response<FinalDemonstration>): Boolean {
+        return try {
+            val response = call()
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                demonstration = body
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    400 -> messageFrom(response, "Revisa la modalidad y la fecha")
+                    403 -> "Esta demostración no es tuya"
+                    404 -> messageFrom(response, "No encontramos la demostración")
+                    else -> messageFrom(response, "No se pudo completar la acción (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
+        }
+    }
+
     // ------------------------------------------------------ ACCESO BIOMÉTRICO (US03)
     // true si el último signIn fue rechazado por usuario o contraseña (401)
     var credentialsRejected = false
@@ -375,7 +506,7 @@ class SkillSwapViewModel : ViewModel() {
     }
 
     // data.type de la notificación tocada -> pantalla que se abre
-    fun openFromNotification(type: String, caseId: Int?) {
+    fun openFromNotification(type: String, caseId: Int?, demonstrationId: Int? = null) {
         pendingRoute = when (type) {
             "MiniProjectEscalatedByAi", "VerificationCaseResolved" ->
                 if (caseId != null) {
@@ -383,6 +514,10 @@ class SkillSwapViewModel : ViewModel() {
                     "CaseStatus"
                 } else "Path"
             "MiniProjectApprovedByAi" -> "Path"
+            "FinalDemonstrationApproved", "FinalDemonstrationRejected" -> {
+                selectedDemonstrationId = demonstrationId
+                "Demonstration"
+            }
             else -> null
         }
     }
