@@ -113,6 +113,8 @@ class SkillSwapViewModel : ViewModel() {
         plan = null
         planLimitMessage = null
         interests = emptyList()
+        myPaths = emptyList()
+        selectedPathId = null
         path = null
         selectedNode = null
         certificate = null
@@ -212,7 +214,11 @@ class SkillSwapViewModel : ViewModel() {
             val response = RetrofitClient.webService.getLearningPaths(studentId)
             val body = response.body()
             if (response.isSuccessful && body != null) {
-                val latest = body.firstOrNull()
+                myPaths = body
+                // La ruta elegida en "Mis rutas"; si no hay, la activa; si no, la más reciente
+                val latest = body.firstOrNull { it.id == selectedPathId }
+                    ?: body.firstOrNull { it.status == "Active" }
+                    ?: body.firstOrNull()
                 path = latest
                 showingCache = false
                 // Guardar en SQLite es opcional: si falla, la ruta igual se muestra
@@ -297,6 +303,7 @@ class SkillSwapViewModel : ViewModel() {
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 path = body
+                selectedPathId = body.id
                 selectedNode = null
                 showingCache = false
                 try {
@@ -532,6 +539,81 @@ class SkillSwapViewModel : ViewModel() {
                 "Demonstration"
             }
             else -> null
+        }
+    }
+
+    // ------------------------------------------------------------- MIS RUTAS
+    // Todas las rutas del Estudiante (la más reciente primero) y la que eligió abrir (null = la activa)
+    var myPaths: List<LearningPath> by mutableStateOf(emptyList())
+    var selectedPathId: Int? = null
+
+    // Lee todas las rutas y el plan (para saber cuántas permite). true si llegaron ambos.
+    suspend fun loadMyPaths(): Boolean {
+        val studentId = user?.id
+        if (studentId == null) {
+            errorMessage = "Inicia sesión para ver tus rutas"
+            return false
+        }
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para ver tus rutas"
+            return false
+        }
+        try {
+            val response = RetrofitClient.webService.getLearningPaths(studentId)
+            val body = response.body()
+            if (!response.isSuccessful || body == null) {
+                errorMessage = messageFrom(response, "No se pudieron cargar tus rutas (${response.code()})")
+                return false
+            }
+            myPaths = body
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            return false
+        }
+        return loadPlan()
+    }
+
+    // Deja esa ruta como la que muestra la pantalla principal
+    fun openPath(chosen: LearningPath) {
+        path = chosen
+        selectedPathId = chosen.id
+        selectedNode = null
+        showingCache = false
+    }
+
+    suspend fun pausePath(pathId: Int): Boolean {
+        return changePath("No se pudo pausar la ruta") { RetrofitClient.webService.pausePath(pathId) }
+    }
+
+    suspend fun resumePath(pathId: Int): Boolean {
+        return changePath("No se pudo reanudar la ruta") { RetrofitClient.webService.resumePath(pathId) }
+    }
+
+    // Pausa o reanuda y deja al día la lista y la ruta que se está mostrando
+    private suspend fun changePath(failure: String, call: suspend () -> Response<LearningPath>): Boolean {
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para cambiar tus rutas"
+            return false
+        }
+        return try {
+            val response = call()
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                if (path?.id == body.id) path = body
+                myPaths = myPaths.map { if (it.id == body.id) body else it }
+                true
+            } else {
+                errorMessage = when (response.code()) {
+                    403 -> "Esta ruta no es tuya"
+                    404 -> "No encontramos la ruta"
+                    409 -> messageFrom(response, "Tu plan no permite este cambio")
+                    else -> messageFrom(response, "$failure (${response.code()})")
+                }
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
         }
     }
 
