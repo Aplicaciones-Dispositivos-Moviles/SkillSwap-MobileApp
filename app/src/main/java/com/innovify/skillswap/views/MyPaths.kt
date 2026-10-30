@@ -2,6 +2,7 @@ package com.innovify.skillswap.views
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,6 +43,7 @@ import com.innovify.skillswap.model.beans.nodeCount
 import com.innovify.skillswap.model.beans.pathStatusLabel
 import com.innovify.skillswap.model.beans.totalPathCount
 import com.innovify.skillswap.ui.theme.Error
+import com.innovify.skillswap.ui.theme.NeutralBorder
 import com.innovify.skillswap.ui.theme.NeutralSurface
 import com.innovify.skillswap.ui.theme.SkillBlue
 import com.innovify.skillswap.ui.theme.SkillBlueContainer
@@ -143,36 +145,30 @@ fun MyPaths(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControl
                 // Cupos del plan
                 val limits = plan.limits
                 val total = totalPathCount(paths)
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = NeutralSurface),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = if (plan.isPremium()) "Plan mensual" else "Plan gratuito",
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                        Text(
-                            text = "Rutas activas: ${activePathCount(paths)} de ${limits.maxActiveRoutes}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                        Text(
-                            text = "Rutas en total: " +
-                                if (limits.maxTotalRoutes == null) "$total (sin tope)" else "$total de ${limits.maxTotalRoutes}",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        if (paths.any { it.advanced }) {
-                            Text(
-                                text = "Las rutas avanzadas no cuentan en estos cupos.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
-                            )
-                        }
-                        if (!plan.isPremium()) {
-                            TextButton(onClick = { nav.navigate("MyPlan") }) { Text(text = "Ver el plan mensual") }
-                        }
-                    }
+                val active = activePathCount(paths)
+                val maxTotal = limits.maxTotalRoutes
+                PlanQuotaCard(
+                    label = "TU PLAN",
+                    title = if (plan.isPremium()) "Plan mensual" else "Plan gratuito",
+                    items = listOf(
+                        QuotaItem(
+                            "Rutas activas", "$active de ${limits.maxActiveRoutes}",
+                            active.toFloat() / limits.maxActiveRoutes
+                        ),
+                        if (maxTotal == null) QuotaItem("Rutas en total", "$total · sin tope")
+                        else QuotaItem("Rutas en total", "$total de $maxTotal", total.toFloat() / maxTotal)
+                    )
+                )
+                if (paths.any { it.advanced }) {
+                    Text(
+                        text = "Las rutas avanzadas no cuentan en estos cupos.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                if (!plan.isPremium()) {
+                    TextButton(onClick = { nav.navigate("MyPlan") }) { Text(text = "Ver el plan mensual") }
                 }
 
                 if (limitMessage != null) {
@@ -277,6 +273,7 @@ private fun PathCard(
     }
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(if (shown) 2.dp else 1.dp, if (shown) SkillBlue else NeutralBorder),
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 12.dp)
@@ -285,7 +282,7 @@ private fun PathCard(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 StatusChip(text = look.first, color = look.second, container = look.third)
                 if (path.advanced) StatusChip(text = "Avanzada", color = SkillBlue, container = SkillBlueContainer)
-                if (shown) StatusChip(text = "Abierta", color = TextSecondary, container = NeutralSurface)
+                if (shown) StatusChip(text = "Abierta", color = SkillBlue, container = SkillBlueContainer)
             }
             Text(
                 text = path.goal,
