@@ -59,6 +59,16 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
         }
     }
 
+    // Si el nodo ya tiene un quiz calificado se ofrece volver a ver su resultado (Rendir quiz pide uno nuevo)
+    var hasQuizResult by remember { mutableStateOf(false) }
+    LaunchedEffect(node?.id, viewModel.quizStatus, viewModel.attemptResult) {
+        val nodeId = node?.id ?: return@LaunchedEffect
+        viewModel.viewModelScope.launch(Dispatchers.IO) {
+            val has = viewModel.hasQuizResult(context, nodeId)
+            withContext(Dispatchers.Main) { hasQuizResult = has }
+        }
+    }
+
     val total = viewModel.path?.nodes?.size ?: 0
     var enabling by remember { mutableStateOf(false) }
 
@@ -171,6 +181,25 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
                                 .height(52.dp)
                         ) {
                             Text(text = "Rendir quiz")
+                        }
+                    }
+
+                    if (hasQuizResult) {
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.viewModelScope.launch(Dispatchers.IO) {
+                                    val ok = viewModel.openLastResult(context, node.id)
+                                    withContext(Dispatchers.Main) {
+                                        if (ok) nav.navigate("QuizResult")
+                                        else Toast.makeText(context, viewModel.errorMessage, Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                        ) {
+                            Text(text = "Ver último resultado del quiz")
                         }
                     }
 

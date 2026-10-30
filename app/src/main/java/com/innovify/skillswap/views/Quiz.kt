@@ -19,8 +19,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,6 +49,9 @@ fun Quiz(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController
     val node = viewModel.selectedNode
     var loading by remember { mutableStateOf(true) }
     var sending by remember { mutableStateOf(false) }
+    // Reenvío de un quiz "Pending": se intenta solo al abrir la pantalla y también a mano
+    var retrying by remember { mutableStateOf(false) }
+    var autoTried by remember { mutableStateOf(false) }
 
     // T53: apenas el quiz está calificado se pasa a la pantalla de resultado
     // (también cuando el reenvío al reconectar lo califica con esta pantalla abierta)
@@ -71,6 +76,18 @@ fun Quiz(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController
                     loading = false
                     if (!ok) Toast.makeText(context, viewModel.errorMessage, Toast.LENGTH_LONG).show()
                 }
+            }
+        }
+    }
+
+    // Un quiz que quedó "Pending" se reenvía solo al abrirlo con internet (antes solo se reenviaba al volver la red)
+    LaunchedEffect(loading, viewModel.quizStatus, viewModel.connectivity.isOnline) {
+        if (!loading && !autoTried && viewModel.quizStatus == "Pending" && viewModel.connectivity.isOnline) {
+            autoTried = true
+            retrying = true
+            viewModel.viewModelScope.launch(Dispatchers.IO) {
+                viewModel.retryPendingQuiz(context)
+                withContext(Dispatchers.Main) { retrying = false }
             }
         }
     }
@@ -199,11 +216,55 @@ fun Quiz(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController
             }
 
             if (status == "Pending") {
+                val online = viewModel.connectivity.isOnline
                 Text(
-                    text = "Respuestas guardadas en tu teléfono. Se enviarán cuando haya internet.",
+                    text = when {
+                        retrying -> "Enviando tus respuestas…"
+                        online -> "Tus respuestas están guardadas en tu teléfono, pero todavía no se calificaron."
+                        else -> "Respuestas guardadas en tu teléfono. Se enviarán cuando haya internet."
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(start = 8.dp, top = 8.dp)
                 )
+                OutlinedButton(
+                    enabled = online && !retrying,
+                    onClick = {
+                        retrying = true
+                        viewModel.viewModelScope.launch(Dispatchers.IO) {
+                            viewModel.retryPendingQuiz(context)
+                            withContext(Dispatchers.Main) { retrying = false }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp, top = 12.dp)
+                        .height(52.dp)
+                ) {
+                    Text(
+                        text = when {
+                            retrying -> "Enviando…"
+                            !online -> "Necesitas internet para enviar"
+                            else -> "Reenviar ahora"
+                        }
+                    )
+                }
+                // Si el servidor rechazó el intento (4xx), reintentar no sirve: se puede descartar y pedir otro quiz
+                if (viewModel.quizWasRejected() && node != null) {
+                    TextButton(
+                        enabled = !retrying && online,
+                        onClick = {
+                            retrying = true
+                            viewModel.viewModelScope.launch(Dispatchers.IO) {
+                                val ok = viewModel.discardPendingQuiz(context, node.id)
+                                withContext(Dispatchers.Main) {
+                                    retrying = false
+                                    if (!ok) Toast.makeText(context, viewModel.errorMessage, Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        },
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) { Text(text = "Descartar este intento y pedir otro quiz") }
+                }
             }
 
             if (viewModel.quizMessage.isNotEmpty()) {

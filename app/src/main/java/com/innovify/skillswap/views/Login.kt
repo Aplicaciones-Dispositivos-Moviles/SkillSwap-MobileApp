@@ -2,6 +2,7 @@ package com.innovify.skillswap.views
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -34,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
@@ -96,25 +99,17 @@ fun Login(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControlle
             .verticalScroll(rememberScrollState())
             .padding(top = 80.dp, bottom = 32.dp, start = 24.dp, end = 24.dp)
     ) {
-        // Marca: cuadrado azul con las flechas de intercambio
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(56.dp)
-                .background(SkillBlue, RoundedCornerShape(16.dp))
-        ) {
-            Text(text = "⇄", color = Color.White, style = MaterialTheme.typography.headlineSmall)
-        }
-        Text(
-            text = "SkillSwap",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(top = 12.dp)
+        // Marca: el logo de SkillSwap (res/drawable-nodpi/skillswap_logo.png)
+        Image(
+            painter = painterResource(id = com.innovify.skillswap.R.drawable.skillswap_logo),
+            contentDescription = "SkillSwap",
+            modifier = Modifier.width(260.dp)
         )
         Text(
             text = "Valida tus habilidades con evidencia real",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 32.dp)
+            modifier = Modifier.padding(top = 12.dp, bottom = 32.dp)
         )
 
         Text(
