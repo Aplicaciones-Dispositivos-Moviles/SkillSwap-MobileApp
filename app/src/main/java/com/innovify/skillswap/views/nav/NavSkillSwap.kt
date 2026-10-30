@@ -19,6 +19,7 @@ import com.innovify.skillswap.views.CaseStatus
 import com.innovify.skillswap.views.Demonstration
 import com.innovify.skillswap.views.DemonstrationVideo
 import com.innovify.skillswap.views.Interests
+import com.innovify.skillswap.views.MyPaths
 import com.innovify.skillswap.views.MyPlan
 import com.innovify.skillswap.views.Profile
 import com.innovify.skillswap.views.CertificateCapture
@@ -114,6 +115,7 @@ fun NavSkillSwap(viewModel: SkillSwapViewModel, context: Context) {
         composable("Demonstration") { Demonstration(viewModel, context, recordarPantalla) }
         composable("DemonstrationVideo") { DemonstrationVideo(viewModel, context, recordarPantalla) }
         composable("MyPlan") { MyPlan(viewModel, context, recordarPantalla) }
+        composable("MyPaths") { MyPaths(viewModel, context, recordarPantalla) }
         composable("Interests") { Interests(viewModel, context, recordarPantalla) }
 
     }

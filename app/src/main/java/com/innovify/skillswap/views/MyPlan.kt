@@ -98,7 +98,7 @@ fun MyPlan(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControll
             confirmButton = {
                 TextButton(onClick = {
                     confirmSubscribe = false
-                    act("Premium activado") { viewModel.subscribe() }
+                    act("Premium activado. Ya puedes tener más rutas activas") { viewModel.subscribe() }
                 }) { Text(text = "Activar") }
             },
             dismissButton = { TextButton(onClick = { confirmSubscribe = false }) { Text(text = "Cancelar") } }
@@ -173,6 +173,14 @@ fun MyPlan(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControll
                             .height(52.dp)
                     ) { Text(text = if (working) "Cancelando…" else "Cancelar suscripción") }
                 }
+
+                OutlinedButton(
+                    onClick = { nav.navigate("MyPaths") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp)
+                        .height(52.dp)
+                ) { Text(text = "Ver mis rutas") }
 
                 TextButton(
                     enabled = !loading && !working && viewModel.connectivity.isOnline,
