@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -53,6 +54,7 @@ import kotlinx.coroutines.withContext
 fun PathList(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
 
     var loading by remember { mutableStateOf(true) }
+    var resuming by remember { mutableStateOf(false) }
 
     // Carga la ruta al entrar y otra vez cada vez que cambia la conexión (T49):
     // sin internet muestra lo guardado; al volver internet se actualiza sola.
@@ -98,6 +100,20 @@ fun PathList(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContro
             }
         }
 
+        if (!loading && path != null) {
+            item {
+                OutlinedButton(
+                    onClick = { nav.navigate("MyPaths") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                        .height(52.dp)
+                ) {
+                    Text(text = "Mis rutas")
+                }
+            }
+        }
+
         if (loading) {
             item { Text(text = "Cargando…", style = MaterialTheme.typography.bodyLarge) }
         } else if (path == null) {
@@ -131,7 +147,11 @@ fun PathList(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContro
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "TU RUTA ACTIVA",
+                            text = when (path.status) {
+                                "Paused" -> "RUTA PAUSADA"
+                                "Completed" -> "RUTA COMPLETADA"
+                                else -> "TU RUTA ACTIVA"
+                            },
                             style = MaterialTheme.typography.labelMedium,
                             color = Color.White.copy(alpha = 0.8f)
                         )
@@ -178,6 +198,45 @@ fun PathList(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContro
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 8.dp)
                     )
+                }
+                // Una ruta pausada conserva su progreso, pero no se puede avanzar hasta reanudarla
+                if (path.status == "Paused") {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = com.innovify.skillswap.ui.theme.WarningContainer),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "Esta ruta está pausada. Conserva tu progreso, pero no puedes avanzar hasta reanudarla.",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Button(
+                                enabled = !resuming && viewModel.connectivity.isOnline,
+                                onClick = {
+                                    resuming = true
+                                    viewModel.viewModelScope.launch(Dispatchers.IO) {
+                                        val ok = viewModel.resumePath(path.id)
+                                        withContext(Dispatchers.Main) {
+                                            resuming = false
+                                            Toast.makeText(
+                                                context,
+                                                if (ok) "Ruta reanudada" else viewModel.errorMessage,
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 12.dp)
+                                    .height(52.dp)
+                            ) {
+                                Text(text = if (resuming) "Reanudando…" else "Reanudar ruta")
+                            }
+                        }
+                    }
                 }
                 // US28: con todos los nodos completados se puede programar la demostración final
                 if (path.status == "Completed" || (nodes.isNotEmpty() && done == nodes.size)) {

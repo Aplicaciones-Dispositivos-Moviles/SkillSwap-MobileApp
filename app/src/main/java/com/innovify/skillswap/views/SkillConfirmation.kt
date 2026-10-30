@@ -40,8 +40,6 @@ import com.innovify.skillswap.ui.theme.NeutralSurface
 import com.innovify.skillswap.ui.theme.SkillBlue
 import com.innovify.skillswap.ui.theme.SkillBlueContainer
 import com.innovify.skillswap.ui.theme.TextSecondary
-import com.innovify.skillswap.ui.theme.Warning
-import com.innovify.skillswap.ui.theme.WarningContainer
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -116,28 +114,12 @@ fun SkillConfirmation(viewModel: SkillSwapViewModel, context: Context, nav: NavH
             }
 
             if (limitMessage != null) {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = WarningContainer),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Llegaste al límite de tu plan", style = MaterialTheme.typography.titleSmall, color = Warning)
-                        Text(
-                            text = limitMessage ?: "",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                        Button(
-                            onClick = { nav.navigate("MyPlan") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 12.dp)
-                                .height(52.dp)
-                        ) { Text(text = "Ver mi plan") }
-                    }
-                }
+                PlanLimitCard(
+                    message = limitMessage ?: "",
+                    showUpgrade = viewModel.plan?.plan != "Premium",
+                    onUpgrade = { nav.navigate("MyPlan") },
+                    onContinue = { nav.navigate("MyPaths") }
+                )
             }
 
             Button(

@@ -151,7 +151,7 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
                     modifier = Modifier.padding(top = 24.dp)
                 ) {
                     // T44: solo un nodo disponible y sin certificado puede recibir uno
-                    if (node.status == "Available" && node.linkedCertificateId == null) {
+                    if (node.status == "Available" && node.linkedCertificateId == null && viewModel.path?.status != "Paused") {
                         Button(
                             onClick = { nav.navigate("Certificate") },
                             modifier = Modifier
@@ -163,10 +163,12 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
                     }
 
                     // Flujo del informe: el certificado vinculado habilita la evaluación práctica del nodo
-                    val evaluationEnabled = node.status == "Available" && node.linkedCertificateId != null
+                    val pathPaused = viewModel.path?.status == "Paused"
+                    val evaluationEnabled = node.status == "Available" && node.linkedCertificateId != null && !pathPaused
                     if (node.status == "Available" && !evaluationEnabled) {
                         Text(
-                            text = "Sube tu certificado para habilitar el quiz y el proyecto de este nodo.",
+                            text = if (pathPaused) "Esta ruta está pausada. Reanúdala para continuar."
+                            else "Sube tu certificado para habilitar el quiz y el proyecto de este nodo.",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary
                         )

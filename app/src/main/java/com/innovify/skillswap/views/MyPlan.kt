@@ -98,7 +98,7 @@ fun MyPlan(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControll
             confirmButton = {
                 TextButton(onClick = {
                     confirmSubscribe = false
-                    act("Premium activado") { viewModel.subscribe() }
+                    act("Premium activado. Ya puedes tener más rutas activas") { viewModel.subscribe() }
                 }) { Text(text = "Activar") }
             },
             dismissButton = { TextButton(onClick = { confirmSubscribe = false }) { Text(text = "Cancelar") } }
@@ -174,6 +174,14 @@ fun MyPlan(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControll
                     ) { Text(text = if (working) "Cancelando…" else "Cancelar suscripción") }
                 }
 
+                OutlinedButton(
+                    onClick = { nav.navigate("MyPaths") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp)
+                        .height(52.dp)
+                ) { Text(text = "Ver mis rutas") }
+
                 TextButton(
                     enabled = !loading && !working && viewModel.connectivity.isOnline,
                     onClick = { load() },
@@ -220,33 +228,17 @@ private fun PlanContent(plan: StudentPlan) {
         )
     }
 
-    Text(
-        text = "Límites de tu plan",
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
-    )
-    Card(
-        colors = CardDefaults.cardColors(containerColor = NeutralSurface),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            LimitRow("Rutas activas", plan.limits.maxActiveRoutes.toString())
-            LimitRow("Rutas en total", plan.limits.totalRoutesLabel())
-            LimitRow("Escalamientos al mes", plan.limits.monthlyEscalations.toString())
-            LimitRow("Plazo de revisión", plan.limits.reviewDeadline?.label() ?: "—")
-        }
+    Column(modifier = Modifier.padding(top = 24.dp)) {
+        PlanQuotaCard(
+            label = "LÍMITES DE TU PLAN",
+            title = null,
+            items = listOf(
+                QuotaItem("Rutas activas a la vez", plan.limits.maxActiveRoutes.toString()),
+                QuotaItem("Rutas en total", plan.limits.totalRoutesLabel()),
+                QuotaItem("Escalamientos al mes", plan.limits.monthlyEscalations.toString()),
+                QuotaItem("Plazo de revisión", plan.limits.reviewDeadline?.label() ?: "—")
+            )
+        )
     }
 }
 
-@Composable
-private fun LimitRow(label: String, value: String) {
-    Row(modifier = Modifier.padding(vertical = 4.dp)) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = TextSecondary,
-            modifier = Modifier.weight(0.55f)
-        )
-        Text(text = value, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(0.45f))
-    }
-}
