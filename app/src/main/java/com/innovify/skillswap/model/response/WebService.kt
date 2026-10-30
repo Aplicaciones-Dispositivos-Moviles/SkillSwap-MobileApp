@@ -144,6 +144,14 @@ interface WebService {
     @POST("api/v1/verification-cases/{id}/appeal")
     suspend fun appealVerificationCase(@Path("id") id: Int): Response<VerificationCase>
 
+    // Pausa una ruta activa: conserva su progreso pero no se puede avanzar. 200 LearningPath | 403 | 404 | 409 no está activa
+    @PATCH("api/v1/learning-paths/{pathId}/pause")
+    suspend fun pausePath(@Path("pathId") pathId: Int): Response<LearningPath>
+
+    // Reanuda una ruta pausada si el plan admite otra activa. 200 LearningPath | 403 | 404 | 409 no está pausada o PlanLimitReached
+    @PATCH("api/v1/learning-paths/{pathId}/resume")
+    suspend fun resumePath(@Path("pathId") pathId: Int): Response<LearningPath>
+
     // US26: adjunta (o reemplaza) el enlace de evidencia mientras el caso no esté resuelto.
     // 200 VerificationCase | 400 no es http/https | 403 | 404 | 409 ya resuelto
     @PUT("api/v1/verification-cases/{id}/evidence")
