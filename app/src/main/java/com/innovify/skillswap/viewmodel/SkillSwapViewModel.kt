@@ -807,6 +807,8 @@ class SkillSwapViewModel : ViewModel() {
     var quizStatus: String by mutableStateOf("Draft")
     var attemptResult: AssessmentAttempt? by mutableStateOf(null)
     var quizMessage: String by mutableStateOf("")
+    // Código HTTP del último envío de quiz que falló (0 = sin respuesta del servidor, p. ej. sin internet)
+    var lastSendCode: Int by mutableStateOf(0)
 
     private fun showQuiz(quiz: AssessmentBlueprint, progress: QuizProgress?) {
         val saved = progress?.answers
@@ -906,6 +908,7 @@ class SkillSwapViewModel : ViewModel() {
 
     // POST api/v1/assessment-attempts. Devuelve el resultado, o null si no se pudo (queda "Pending").
     private suspend fun sendAttempt(context: Context, progress: QuizProgress): AssessmentAttempt? {
+        lastSendCode = 0
         return try {
             val response = RetrofitClient.webService.submitAttempt(
                 SubmitAttemptRequest(progress.blueprintId, progress.answers)
@@ -923,6 +926,7 @@ class SkillSwapViewModel : ViewModel() {
                 }
                 body
             } else {
+                lastSendCode = response.code()
                 errorMessage = messageFrom(response, "No se pudo enviar el quiz (${response.code()})")
                 null
             }
@@ -945,6 +949,79 @@ class SkillSwapViewModel : ViewModel() {
             if (sendAttempt(context, progress) != null) sent++
         }
         return sent
+    }
+
+    // Reintenta a mano el quiz abierto que quedó "Pending". true si el backend lo calificó; si no, quizMessage
+    // explica el motivo real (antes solo se veía "se enviarán cuando haya internet" aunque ya hubiera).
+    suspend fun retryPendingQuiz(context: Context): Boolean {
+        val quiz = blueprint ?: return false
+        if (quizStatus != "Pending") return false
+        if (!connectivity.isOnline) {
+            quizMessage = "Sin conexión.\nTus respuestas siguen guardadas y se enviarán cuando vuelva internet."
+            return false
+        }
+        val sent = sendAttempt(context, QuizProgress(quiz.id, quiz.pathNodeId, answers, "Pending", null))
+        quizMessage = when {
+            sent != null -> ""
+            quizWasRejected() -> errorMessage + "\nEl servidor rechazó este intento. Puedes descartarlo y pedir un quiz nuevo."
+            else -> errorMessage + "\nTus respuestas siguen guardadas."
+        }
+        return sent != null
+    }
+
+    // true si el servidor respondió con un error 4xx que reintentar no arregla (el 401 es sesión vencida)
+    fun quizWasRejected(): Boolean = lastSendCode in 400..499 && lastSendCode != 401
+
+    // Descarta el quiz guardado del nodo y pide uno nuevo al backend. true si el nuevo quedó abierto.
+    suspend fun discardPendingQuiz(context: Context, nodeId: Int): Boolean {
+        try {
+            db(context).deleteQuiz(nodeId)
+        } catch (e: Exception) {
+            errorMessage = "No se pudo descartar el intento guardado"
+            return false
+        }
+        blueprint = null
+        answers = emptyList()
+        quizStatus = "Draft"
+        attemptResult = null
+        quizMessage = ""
+        lastSendCode = 0
+        return openQuiz(context, nodeId)
+    }
+
+    // true si el nodo tiene un quiz ya calificado cuyo resultado se puede volver a ver
+    fun hasQuizResult(context: Context, nodeId: Int): Boolean {
+        return try {
+            val db = db(context)
+            val local = db.findBlueprint(nodeId)
+            val progress = local?.let { db.findProgress(it.id) }
+            progress != null && progress.status == "Sent" && progress.resultJson != null
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // Deja cargado el último resultado del nodo (sin pedir un quiz nuevo). true si había uno.
+    fun openLastResult(context: Context, nodeId: Int): Boolean {
+        val db = db(context)
+        val local = try {
+            db.findBlueprint(nodeId)
+        } catch (e: Exception) {
+            null
+        }
+        val progress = local?.let {
+            try {
+                db.findProgress(it.id)
+            } catch (e: Exception) {
+                null
+            }
+        }
+        if (local == null || progress == null || progress.status != "Sent" || progress.resultJson == null) {
+            errorMessage = "Todavía no tienes un resultado de quiz para este nodo"
+            return false
+        }
+        showQuiz(local, progress)
+        return true
     }
 
     // ------------------------------------------------------------ PROYECTO (T55)

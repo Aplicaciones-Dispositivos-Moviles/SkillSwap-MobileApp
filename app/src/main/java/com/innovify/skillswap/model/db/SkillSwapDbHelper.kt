@@ -315,6 +315,20 @@ class SkillSwapDbHelper(context: Context) : SQLiteOpenHelper(context, "skillswap
         )
     }
 
+    // Borra el quiz guardado de un nodo (el quiz y sus respuestas). Sirve para descartar un intento que el
+    // servidor rechazó y pedir uno nuevo.
+    fun deleteQuiz(nodeId: Int) {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            db.delete("quiz_attempt", "node_id = ?", arrayOf(nodeId.toString()))
+            db.delete("quiz_blueprint", "node_id = ?", arrayOf(nodeId.toString()))
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+    }
+
     // ------------------------------------------------------------ PROYECTO (T55)
     // Guarda el proyecto del nodo. Si es el mismo de antes conserva su entrega; si es otro, la descarta.
     fun saveMiniProject(project: MiniProject) {
