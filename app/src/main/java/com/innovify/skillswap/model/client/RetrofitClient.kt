@@ -28,7 +28,7 @@ object RetrofitClient {
 
     val webService: WebService by lazy {
         Retrofit.Builder()
-            .baseUrl("https://skillswap-webservices-java.onrender.com/")
+            .baseUrl("https://skillswap-innovify.duckdns.org/")
             .client(okHttp)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
