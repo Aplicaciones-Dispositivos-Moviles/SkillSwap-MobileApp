@@ -7,6 +7,7 @@ import com.innovify.skillswap.shared.infrastructure.network.RetrofitClient
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
@@ -26,6 +27,10 @@ interface CertificateApi {
         @Part issueDate: MultipartBody.Part,
         @Part ocrText: MultipartBody.Part
     ): Response<Certificate>
+
+    // Certificates of the signed-in Student, newest first (the backend takes the owner from the token).
+    @GET("api/v1/certificates")
+    suspend fun getMyCertificates(): Response<List<Certificate>>
 
     // Asocia el certificado al nodo si cubre su habilidad.
     // 200 CertificateLink | 409 certificado no verificado | 422 no cubre la habilidad

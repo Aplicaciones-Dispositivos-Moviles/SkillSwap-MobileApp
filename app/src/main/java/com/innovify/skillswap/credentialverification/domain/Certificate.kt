@@ -15,8 +15,32 @@ data class Certificate(
     var verificationMethod: String?,
     var riskLevel: String?,
     var fileUrl: String?,
-    var holderNameMismatch: Boolean
+    var holderNameMismatch: Boolean,
+    // Registration time (UTC); only the GET list uses it, so it is optional
+    var createdAt: String? = null
 )
+
+// What the Student sees of a certificate's status in "Mis certificados".
+enum class CertificateStage { Validated, InProgress, Rejected }
+
+// Verified -> validated; Rejected -> rejected; Pending, Unverified, Suspicious (and any new status) are
+// still waiting for a decision.
+fun Certificate.stage(): CertificateStage = when (status) {
+    "Verified" -> CertificateStage.Validated
+    "Rejected" -> CertificateStage.Rejected
+    else -> CertificateStage.InProgress
+}
+
+// Filter chips of "Mis certificados" (null stage = every certificate).
+enum class CertificateFilter(val stage: CertificateStage?) {
+    All(null),
+    Validated(CertificateStage.Validated),
+    InProgress(CertificateStage.InProgress),
+    Rejected(CertificateStage.Rejected)
+}
+
+fun List<Certificate>.filterBy(filter: CertificateFilter): List<Certificate> =
+    if (filter.stage == null) this else filter { it.stage() == filter.stage }
 
 // Body de POST api/v1/path-nodes/{nodeId}/certificate
 data class LinkCertificateRequest(

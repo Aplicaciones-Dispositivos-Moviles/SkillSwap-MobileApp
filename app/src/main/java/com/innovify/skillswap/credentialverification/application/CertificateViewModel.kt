@@ -41,11 +41,42 @@ class CertificateViewModel(
     // T48: certificado guardado en el teléfono para el nodo abierto (null si no hay)
     var localCertificate: LocalCertificate? by mutableStateOf(null)
 
+    // "Mis certificados": every certificate of the Student, newest first (always from the server)
+    var certificates: List<Certificate> by mutableStateOf(emptyList())
+
     init {
         session.onSignOut {
             certificate = null
             certificateLink = null
             localCertificate = null
+            certificates = emptyList()
+        }
+    }
+
+    // GET api/v1/certificates. suspend: the screen calls it on Dispatchers.IO. true when the list arrived;
+    // otherwise errorMessage says why.
+    suspend fun loadCertificates(): Boolean {
+        if (session.user == null) {
+            errorMessage = "Inicia sesión para ver tus certificados"
+            return false
+        }
+        if (!connectivity.isOnline) {
+            errorMessage = "Necesitas internet para ver tus certificados"
+            return false
+        }
+        return try {
+            val response = certificateApi.getMyCertificates()
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                certificates = body
+                true
+            } else {
+                errorMessage = messageFrom(response, "No se pudieron cargar tus certificados (${response.code()})")
+                false
+            }
+        } catch (e: Exception) {
+            errorMessage = "No se pudo conectar con el servidor"
+            false
         }
     }
 

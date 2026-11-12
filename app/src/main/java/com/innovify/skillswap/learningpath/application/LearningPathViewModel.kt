@@ -16,6 +16,14 @@ import com.innovify.skillswap.shared.application.SessionStore
 import com.innovify.skillswap.subscription.application.SubscriptionViewModel
 import retrofit2.Response
 
+// Next step of the path: the first available node in path order (null when none is available).
+fun LearningPath.nextStep(): PathNode? =
+    nodes.orEmpty().sortedBy { it.order }.firstOrNull { it.status == "Available" }
+
+// Every node the Student can see: those of "Mis rutas" plus the path on screen (it may come from the cache).
+fun knownNodes(path: LearningPath?, myPaths: List<LearningPath>): List<PathNode> =
+    (myPaths.flatMap { it.nodes.orEmpty() } + path?.nodes.orEmpty()).distinctBy { it.id }
+
 // learningpath: the path on screen and its selected node, the goal and its skill options, and "Mis rutas".
 // Listing the paths also reads the plan, and a 409 on declareGoal is shown as the plan limit, so it receives
 // the SubscriptionViewModel.
