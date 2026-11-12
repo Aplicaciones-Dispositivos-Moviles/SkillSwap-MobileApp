@@ -7,15 +7,165 @@ import androidx.compose.runtime.setValue
 import com.google.gson.Gson
 import com.innovify.skillswap.assessment.domain.AssessmentAttempt
 import com.innovify.skillswap.assessment.domain.AssessmentBlueprint
+import com.innovify.skillswap.assessment.domain.MiniProjectSubmission
 import com.innovify.skillswap.assessment.domain.QuizProgress
 import com.innovify.skillswap.assessment.domain.SubmitAttemptRequest
+import com.innovify.skillswap.assessment.infrastructure.MiniProjectDao
 import com.innovify.skillswap.assessment.infrastructure.QuizDao
+import com.innovify.skillswap.assessment.infrastructure.SavedQuizAttempt
 import com.innovify.skillswap.assessment.infrastructure.assessmentApi
+import com.innovify.skillswap.learningpath.domain.PathNode
 import com.innovify.skillswap.shared.application.SessionAwareViewModel
 import com.innovify.skillswap.shared.application.SessionStore
 
+// ------------------------------------------------------------ EVALUACIONES TAB
+// There is no list of assessments for the Student in the backend, so the tab is built from what the phone
+// knows: the nodes of the Student's paths, the quizzes saved in SQLite and the saved mini-project submissions.
+
+// Why an item is in "Requieren tu atención", in the order they are shown.
+enum class AttentionReason { UnsentQuiz, CaseInReview, QuizInProgress, ProjectEvaluating, ReadyForQuiz }
+
+data class AttentionItem(
+    val reason: AttentionReason,
+    val node: PathNode,
+    val skillName: String,
+    val caseId: Int? = null,
+    val answered: Int = 0,
+    val total: Int = 0
+)
+
+enum class AssessmentKind { Quiz, MiniProject }
+
+// A graded assessment. passed = null when the outcome is not known on the phone (reviewed by a Verifier).
+data class HistoryItem(
+    val kind: AssessmentKind,
+    val node: PathNode,
+    val skillName: String,
+    val passed: Boolean?,
+    val score: String?,
+    val dateMillis: Long?
+)
+
+data class AssessmentOverview(val attention: List<AttentionItem>, val history: List<HistoryItem>)
+
+/**
+ * Classifies the saved assessments. Only attempts of [nodes] (the Student's own paths) count, because the
+ * phone may keep another account's quizzes. A node is ready for its quiz when it is available, has its
+ * certificate linked, belongs to [activeNodeIds] (the path on screen, empty when it is paused) and nothing
+ * else about it is already waiting.
+ */
+fun assessmentOverview(
+    nodes: List<PathNode>,
+    activeNodeIds: Set<Int>,
+    quizzes: List<SavedQuizAttempt>,
+    projects: List<MiniProjectSubmission>
+): AssessmentOverview {
+    val byId = nodes.associateBy { it.id }
+    val attention = mutableListOf<AttentionItem>()
+    val history = mutableListOf<HistoryItem>()
+
+    for (saved in quizzes) {
+        val node = byId[saved.progress.nodeId] ?: continue
+        val skill = saved.skillName?.ifBlank { null } ?: node.skillName
+        val answers = saved.progress.answers
+        when (saved.progress.status) {
+            "Pending" -> attention += AttentionItem(
+                AttentionReason.UnsentQuiz, node, skill, answered = answers.count { it >= 0 }, total = answers.size
+            )
+            "Draft" -> if (answers.any { it >= 0 }) {
+                attention += AttentionItem(
+                    AttentionReason.QuizInProgress, node, skill, answered = answers.count { it >= 0 }, total = answers.size
+                )
+            }
+            "Sent" -> {
+                val result = attemptOf(saved.progress.resultJson) ?: continue
+                history += HistoryItem(
+                    AssessmentKind.Quiz, node, skill, result.passed,
+                    "${result.score}/${result.totalQuestions}", saved.updatedAt
+                )
+                val caseId = result.verificationCaseId
+                if (caseId != null && node.status != "Completed") {
+                    attention += AttentionItem(AttentionReason.CaseInReview, node, skill, caseId = caseId)
+                }
+            }
+        }
+    }
+
+    for (submission in projects) {
+        val node = byId[submission.pathNodeId] ?: continue
+        val date = epochMillisOf(submission.evaluatedAt ?: submission.submittedAt)
+        val caseId = submission.verificationCaseId
+        when {
+            submission.isEvaluating() ->
+                attention += AttentionItem(AttentionReason.ProjectEvaluating, node, node.skillName)
+            submission.evaluationStatus == "Approved" ->
+                history += HistoryItem(AssessmentKind.MiniProject, node, node.skillName, true, null, date)
+            submission.evaluationStatus == "EscalationLimitReached" ->
+                history += HistoryItem(AssessmentKind.MiniProject, node, node.skillName, false, null, date)
+            submission.evaluationStatus == "Escalated" && caseId != null && node.status != "Completed" ->
+                attention += AttentionItem(AttentionReason.CaseInReview, node, node.skillName, caseId = caseId)
+            else ->
+                history += HistoryItem(AssessmentKind.MiniProject, node, node.skillName, null, null, date)
+        }
+    }
+
+    val waiting = attention.map { it.node.id }.toSet()
+    nodes.filter {
+        it.id in activeNodeIds && it.status == "Available" && it.linkedCertificateId != null && it.id !in waiting
+    }.sortedBy { it.order }.forEach {
+        attention += AttentionItem(AttentionReason.ReadyForQuiz, it, it.skillName)
+    }
+
+    return AssessmentOverview(
+        attention = attention.distinctBy { it.caseId?.let { id -> "case-$id" } ?: "${it.reason}-${it.node.id}" }
+            .sortedBy { it.reason.ordinal },
+        history = history.sortedByDescending { it.dateMillis ?: Long.MIN_VALUE }
+    )
+}
+
+// Backend instant ("2026-09-18T10:00:00Z", with or without the "Z") in epoch millis, or null.
+private fun epochMillisOf(iso: String?): Long? {
+    if (iso.isNullOrBlank()) return null
+    return try {
+        java.time.Instant.parse(iso).toEpochMilli()
+    } catch (e: Exception) {
+        try {
+            java.time.LocalDateTime.parse(iso).toInstant(java.time.ZoneOffset.UTC).toEpochMilli()
+        } catch (e: Exception) {
+            null
+        }
+    }
+}
+
+private fun attemptOf(json: String?): AssessmentAttempt? = try {
+    json?.let { Gson().fromJson(it, AssessmentAttempt::class.java) }
+} catch (e: Exception) {
+    null
+}
+
 // assessment: the node quiz, saved on the phone while it is answered and resent when internet returns.
 class QuizViewModel(session: SessionStore) : SessionAwareViewModel(session) {
+
+    // Saved quiz attempts and mini-project submissions read for the Evaluaciones tab
+    var savedAttempts: List<SavedQuizAttempt> by mutableStateOf(emptyList())
+    var savedProjects: List<MiniProjectSubmission> by mutableStateOf(emptyList())
+
+    // Reads what the phone has saved for these nodes (SQLite, no network). Call it on Dispatchers.IO.
+    fun loadSavedAssessments(context: Context, nodeIds: Collection<Int>) {
+        val db = db(context)
+        savedAttempts = try {
+            QuizDao(db).savedAttempts()
+        } catch (e: Exception) {
+            emptyList()
+        }
+        savedProjects = nodeIds.mapNotNull {
+            try {
+                MiniProjectDao(db).findSubmission(it)
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
 
     // ------------------------------------------------------------ QUIZ (T50 + T51)
     // Quiz abierto, respuestas elegidas (-1 = sin responder) y su estado: Draft | Pending | Sent
@@ -32,6 +182,8 @@ class QuizViewModel(session: SessionStore) : SessionAwareViewModel(session) {
             blueprint = null
             attemptResult = null
             quizMessage = ""
+            savedAttempts = emptyList()
+            savedProjects = emptyList()
         }
     }
 

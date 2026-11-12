@@ -10,6 +10,13 @@ import com.innovify.skillswap.assessment.domain.Question
 import com.innovify.skillswap.assessment.domain.QuizProgress
 import com.innovify.skillswap.shared.infrastructure.db.SkillSwapDbHelper
 
+// A row of quiz_attempt read with the skill of its quiz and when it last changed (epoch millis).
+data class SavedQuizAttempt(
+    val progress: QuizProgress,
+    val skillName: String?,
+    val updatedAt: Long
+)
+
 // Local cache of the assessment context, stored in the shared skillswap.db.
 class QuizDao(private val helper: SkillSwapDbHelper) {
 
@@ -89,6 +96,28 @@ class QuizDao(private val helper: SkillSwapDbHelper) {
             null
         ).use { c ->
             while (c.moveToNext()) list.add(toProgress(c))
+        }
+        return list
+    }
+
+    // Every attempt saved on the phone with the skill of its quiz, most recent first (Evaluaciones tab).
+    fun savedAttempts(): List<SavedQuizAttempt> {
+        val list = mutableListOf<SavedQuizAttempt>()
+        helper.readableDatabase.rawQuery(
+            "SELECT a.blueprint_id, a.node_id, a.answers, a.status, a.result_json, a.updated_at, b.skill_name " +
+                "FROM quiz_attempt a LEFT JOIN quiz_blueprint b ON b.blueprint_id = a.blueprint_id " +
+                "ORDER BY a.updated_at DESC",
+            null
+        ).use { c ->
+            while (c.moveToNext()) {
+                list.add(
+                    SavedQuizAttempt(
+                        progress = toProgress(c),
+                        skillName = if (c.isNull(6)) null else c.getString(6),
+                        updatedAt = c.getLong(5)
+                    )
+                )
+            }
         }
         return list
     }
