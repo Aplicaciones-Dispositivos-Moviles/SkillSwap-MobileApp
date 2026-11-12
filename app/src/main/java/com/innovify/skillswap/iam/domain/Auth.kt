@@ -22,7 +22,10 @@ data class UserResource(
     var email: String,
     var role: String,
     @SerializedName("isVerified") var isVerified: Boolean,
-    var interests: List<String>? = null
+    var interests: List<String>? = null,
+    // GET api/v1/users/me also returns the profile description and the registered real name
+    var bio: String? = null,
+    var fullName: String? = null
 )
 
 // Respuesta de sign-in (AuthenticatedUserResource del backend)

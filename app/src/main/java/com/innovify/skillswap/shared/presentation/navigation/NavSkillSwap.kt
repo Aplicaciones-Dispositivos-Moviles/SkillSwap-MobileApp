@@ -24,7 +24,9 @@ import com.innovify.skillswap.iam.application.SessionViewModel
 import com.innovify.skillswap.learningpath.application.LearningPathViewModel
 import com.innovify.skillswap.reputation.application.WalletViewModel
 import com.innovify.skillswap.subscription.application.SubscriptionViewModel
+import com.innovify.skillswap.assessment.presentation.Assessments
 import com.innovify.skillswap.assessment.presentation.CaseStatus
+import com.innovify.skillswap.credentialverification.presentation.MyCertificates
 import com.innovify.skillswap.finaldemonstration.presentation.Demonstration
 import com.innovify.skillswap.finaldemonstration.presentation.DemonstrationVideo
 import com.innovify.skillswap.iam.presentation.Interests
@@ -123,7 +125,20 @@ fun NavSkillSwap(
 
         composable("Login") { Login(sessionViewModel, context, recordarPantalla) }
         composable("Register") { Register(sessionViewModel, context, recordarPantalla) }
-        composable("Path") { PathList(learningPathViewModel, sessionViewModel, context, recordarPantalla) }
+        // Top-level tabs (bottom navigation): Mi ruta, Certificados, Evaluaciones, Perfil
+        composable("Path") { PathList(learningPathViewModel, sessionViewModel, subscriptionViewModel, context, recordarPantalla) }
+        composable("Certificates") { MyCertificates(certificateViewModel, learningPathViewModel, context, recordarPantalla) }
+        composable("Assessments") {
+            Assessments(quizViewModel, learningPathViewModel, verificationCaseViewModel, context, recordarPantalla)
+        }
+        composable("Profile") {
+            Profile(
+                sessionViewModel, walletViewModel, learningPathViewModel, certificateViewModel, subscriptionViewModel,
+                context, recordarPantalla
+            )
+        }
+
+        // Flow screens: their own top bar, no bottom navigation
         composable("Goal") { GoalInput(learningPathViewModel, context, recordarPantalla) }
         composable("SkillConfirmation") { SkillConfirmation(learningPathViewModel, subscriptionViewModel, context, recordarPantalla) }
         composable("Node") {
@@ -136,7 +151,6 @@ fun NavSkillSwap(
             ProjectDelivery(miniProjectViewModel, learningPathViewModel, verificationCaseViewModel, context, recordarPantalla)
         }
         composable("CaseStatus") { CaseStatus(verificationCaseViewModel, context, recordarPantalla) }
-        composable("Profile") { Profile(sessionViewModel, walletViewModel, context, recordarPantalla) }
         composable("Demonstration") { Demonstration(demonstrationViewModel, context, recordarPantalla) }
         composable("DemonstrationVideo") { DemonstrationVideo(demonstrationViewModel, context, recordarPantalla) }
         composable("MyPlan") { MyPlan(subscriptionViewModel, context, recordarPantalla) }

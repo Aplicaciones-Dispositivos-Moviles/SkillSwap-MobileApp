@@ -14,6 +14,7 @@ import com.innovify.skillswap.iam.domain.AuthUser
 import com.innovify.skillswap.iam.domain.DeviceTokenRequest
 import com.innovify.skillswap.iam.domain.SignInRequest
 import com.innovify.skillswap.iam.domain.SignUpRequest
+import com.innovify.skillswap.iam.domain.UserResource
 import com.innovify.skillswap.iam.infrastructure.BiometricVault
 import com.innovify.skillswap.iam.infrastructure.iamApi
 import com.innovify.skillswap.shared.application.SessionAwareViewModel
@@ -47,6 +48,46 @@ class SessionViewModel(
             session.prefs(context).edit().remove("user").apply()
         }
     }
+
+    // ------------------------------------------------------------------ PERFIL
+    // GET api/v1/users/me: real name, description and interests for the home greeting and the profile.
+    var profile: UserResource? by mutableStateOf(null)
+
+    init {
+        session.onSignOut { profile = null }
+    }
+
+    // Name to greet and show: the registered real name, else the one remembered on this phone, else the username.
+    fun displayName(context: Context): String {
+        val current = session.user ?: return ""
+        return profile?.fullName?.trim()?.ifBlank { null }
+            ?: session.prefs(context).getString(fullNameKey(current.id), null)
+            ?: current.username
+    }
+
+    // true when the profile arrived. The real name is remembered per account so the greeting works offline.
+    suspend fun loadProfile(context: Context): Boolean {
+        val current = session.user ?: return false
+        if (!connectivity.isOnline) return false
+        return try {
+            val response = iamApi.getCurrentUser()
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                profile = body
+                val name = body.fullName?.trim()?.ifBlank { null }
+                session.prefs(context).edit().apply {
+                    if (name != null) putString(fullNameKey(current.id), name) else remove(fullNameKey(current.id))
+                }.apply()
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun fullNameKey(userId: Int) = "full_name_$userId"
 
     // Cierra la sesión: borra lo guardado y limpia lo que se ve en pantalla (ver SessionStore.signOut).
     fun signOut(context: Context) {
