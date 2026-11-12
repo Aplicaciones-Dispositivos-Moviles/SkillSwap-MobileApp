@@ -131,8 +131,39 @@ class QuizViewModel(session: SessionStore) : SessionAwareViewModel(session) {
         else errorMessage + "\nTus respuestas siguen guardadas y se reenviarán al reconectar."
     }
 
-    // POST api/v1/assessment-attempts. Devuelve el resultado, o null si no se pudo (queda "Pending").
-    private suspend fun sendAttempt(context: Context, progress: QuizProgress): AssessmentAttempt? {
+    // When internet returns, the open quiz screen and the navigation's resend can both try to send the same
+    // attempt; the gate lets only one POST through and the other reuses the stored result.
+    private val sendGate = SendOnceGate()
+
+    // Devuelve el resultado, o null si no se pudo (queda "Pending").
+    private suspend fun sendAttempt(context: Context, progress: QuizProgress): AssessmentAttempt? =
+        sendGate.send(alreadyDone = { storedResult(context, progress.blueprintId) }) { postAttempt(context, progress) }
+
+    // Result already saved for this attempt (it was sent by another caller), shown as if this call had sent it.
+    private fun storedResult(context: Context, blueprintId: Int): AssessmentAttempt? {
+        val saved = try {
+            QuizDao(db(context)).findProgress(blueprintId)
+        } catch (e: Exception) {
+            null
+        }
+        if (saved?.status != "Sent") return null
+        val result = saved.resultJson?.let {
+            try {
+                Gson().fromJson(it, AssessmentAttempt::class.java)
+            } catch (e: Exception) {
+                null
+            }
+        } ?: return null
+        if (blueprint?.id == blueprintId) {
+            attemptResult = result
+            quizStatus = "Sent"
+            quizMessage = ""
+        }
+        return result
+    }
+
+    // POST api/v1/assessment-attempts.
+    private suspend fun postAttempt(context: Context, progress: QuizProgress): AssessmentAttempt? {
         lastSendCode = 0
         return try {
             val response = assessmentApi.submitAttempt(

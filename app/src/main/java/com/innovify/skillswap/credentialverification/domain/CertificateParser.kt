@@ -37,7 +37,9 @@ object CertificateParser {
     private val DONE_WORDS = listOf(
         "successfully completed", "has completed", "ha completado", "haber completado",
         "ha aprobado", "haber aprobado", "ha culminado", "haber culminado",
-        "completó", "aprobó", "culminó"
+        "completó", "aprobó", "culminó",
+        // "por completar el curso" / "for completing the course": the course name is usually on the next line
+        "por completar", "por culminar", "por aprobar", "for completing", "for successfully completing"
     )
 
     private val BY_REGEX = Regex(

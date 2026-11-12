@@ -58,6 +58,41 @@ class CertificateParserTest {
     }
 
     @Test
+    fun parsesCourseOnTheLineAfterPorCompletarElCurso() {
+        val text = """
+            CERTIFICADO DE FINALIZACIÓN
+            Coursera
+            Se otorga a Estudiante Prueba Local
+            por completar el curso
+            Programming Fundamentals
+            Fecha: 15/10/2026
+        """.trimIndent()
+
+        val parsed = CertificateParser.parse(text)
+
+        assertEquals("Coursera", parsed.institution)
+        assertEquals("Programming Fundamentals", parsed.course)
+        assertEquals("2026-10-15", parsed.issueDate)
+    }
+
+    @Test
+    fun parsesCourseOnTheLineAfterForCompletingTheCourse() {
+        val text = """
+            edX
+            This certificate is awarded to Ana Torres
+            for completing the course
+            Introduction to Data Science
+            March 3, 2026
+        """.trimIndent()
+
+        val parsed = CertificateParser.parse(text)
+
+        assertEquals("edX", parsed.institution)
+        assertEquals("Introduction to Data Science", parsed.course)
+        assertEquals("2026-03-03", parsed.issueDate)
+    }
+
+    @Test
     fun returnsEmptyFieldsWhenNothingMatches() {
         val parsed = CertificateParser.parse("texto cualquiera sin datos")
 
