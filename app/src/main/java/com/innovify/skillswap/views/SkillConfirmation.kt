@@ -35,15 +35,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.innovify.skillswap.model.beans.SkillOption
-import com.innovify.skillswap.ui.theme.NeutralBorder
-import com.innovify.skillswap.ui.theme.NeutralSurface
-import com.innovify.skillswap.ui.theme.SkillBlue
-import com.innovify.skillswap.ui.theme.SkillBlueContainer
-import com.innovify.skillswap.ui.theme.TextSecondary
+import com.innovify.skillswap.shared.presentation.theme.NeutralBorder
+import com.innovify.skillswap.shared.presentation.theme.NeutralSurface
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
+import com.innovify.skillswap.shared.presentation.theme.TextSecondary
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
+import com.innovify.skillswap.shared.presentation.components.StatusChip
+import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 
 // T47 · Mock-up WF-03 #02: el Estudiante elige y confirma la habilidad antes de construir la ruta.
 @Composable

@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
-import com.innovify.skillswap.ui.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
 import com.innovify.skillswap.viewmodel.BiometricVault
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers

@@ -16,7 +16,7 @@ import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
 import com.innovify.skillswap.model.beans.AuthUser
 import com.innovify.skillswap.model.beans.DeviceTokenRequest
-import com.innovify.skillswap.model.client.RetrofitClient
+import com.innovify.skillswap.shared.infrastructure.network.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

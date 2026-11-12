@@ -43,8 +43,8 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.innovify.skillswap.model.beans.CertificateMismatch
-import com.innovify.skillswap.ui.theme.SkillBlue
-import com.innovify.skillswap.ui.theme.SkillBlueContainer
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
 import com.innovify.skillswap.viewmodel.CertificateOcr
 import com.innovify.skillswap.viewmodel.CertificateParser
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
@@ -55,6 +55,8 @@ import java.io.File
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
+import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
+import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 
 // T44 (captura con la cámara) + T45 (OCR con ML Kit y envío al backend).
 // El certificado puede venir de la cámara o de un archivo (PDF o imagen) elegido del teléfono.

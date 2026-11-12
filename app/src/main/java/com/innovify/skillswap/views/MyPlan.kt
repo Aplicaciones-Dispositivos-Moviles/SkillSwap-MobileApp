@@ -34,17 +34,21 @@ import com.innovify.skillswap.model.beans.isCancelled
 import com.innovify.skillswap.model.beans.isPremium
 import com.innovify.skillswap.model.beans.label
 import com.innovify.skillswap.model.beans.totalRoutesLabel
-import com.innovify.skillswap.ui.theme.Error
-import com.innovify.skillswap.ui.theme.NeutralSurface
-import com.innovify.skillswap.ui.theme.SkillBlue
-import com.innovify.skillswap.ui.theme.SkillBlueContainer
-import com.innovify.skillswap.ui.theme.Success
-import com.innovify.skillswap.ui.theme.SuccessContainer
-import com.innovify.skillswap.ui.theme.TextSecondary
+import com.innovify.skillswap.shared.presentation.theme.Error
+import com.innovify.skillswap.shared.presentation.theme.NeutralSurface
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
+import com.innovify.skillswap.shared.presentation.theme.Success
+import com.innovify.skillswap.shared.presentation.theme.SuccessContainer
+import com.innovify.skillswap.shared.presentation.theme.TextSecondary
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
+import com.innovify.skillswap.shared.presentation.components.StatusChip
+import com.innovify.skillswap.shared.presentation.components.localDate
+import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 
 // US05 · Mi plan: plan vigente (Free o Premium), sus límites, y activar o cancelar Premium (cobro simulado).
 @Composable

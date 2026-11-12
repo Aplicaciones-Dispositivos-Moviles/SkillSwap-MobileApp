@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views.nav
+package com.innovify.skillswap.shared.presentation.navigation
 
 import android.Manifest
 import android.content.Context

@@ -39,22 +39,26 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.innovify.skillswap.model.beans.MiniProjectSubmission
-import com.innovify.skillswap.ui.theme.AiContainer
-import com.innovify.skillswap.ui.theme.AiViolet
-import com.innovify.skillswap.ui.theme.NeutralSurface
-import com.innovify.skillswap.ui.theme.SkillBlue
-import com.innovify.skillswap.ui.theme.SkillBlueContainer
-import com.innovify.skillswap.ui.theme.Success
-import com.innovify.skillswap.ui.theme.SuccessContainer
-import com.innovify.skillswap.ui.theme.TextSecondary
-import com.innovify.skillswap.ui.theme.Warning
-import com.innovify.skillswap.ui.theme.WarningContainer
+import com.innovify.skillswap.shared.presentation.theme.AiContainer
+import com.innovify.skillswap.shared.presentation.theme.AiViolet
+import com.innovify.skillswap.shared.presentation.theme.NeutralSurface
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
+import com.innovify.skillswap.shared.presentation.theme.Success
+import com.innovify.skillswap.shared.presentation.theme.SuccessContainer
+import com.innovify.skillswap.shared.presentation.theme.TextSecondary
+import com.innovify.skillswap.shared.presentation.theme.Warning
+import com.innovify.skillswap.shared.presentation.theme.WarningContainer
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.Instant
+import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
+import com.innovify.skillswap.shared.presentation.components.StatusChip
+import com.innovify.skillswap.shared.presentation.components.localDate
+import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 
 // Tiempo que falta para el plazo, o null si ya venció o no se pudo leer.
 private fun remaining(dueIso: String?): String? {

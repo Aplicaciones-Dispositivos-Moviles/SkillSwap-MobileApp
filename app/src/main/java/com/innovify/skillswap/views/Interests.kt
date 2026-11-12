@@ -33,13 +33,15 @@ import com.innovify.skillswap.model.beans.MAX_INTERESTS
 import com.innovify.skillswap.model.beans.MAX_INTEREST_LENGTH
 import com.innovify.skillswap.model.beans.cleanInterest
 import com.innovify.skillswap.model.beans.interestError
-import com.innovify.skillswap.ui.theme.Error
-import com.innovify.skillswap.ui.theme.NeutralBorder
-import com.innovify.skillswap.ui.theme.TextSecondary
+import com.innovify.skillswap.shared.presentation.theme.Error
+import com.innovify.skillswap.shared.presentation.theme.NeutralBorder
+import com.innovify.skillswap.shared.presentation.theme.TextSecondary
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
+import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 
 // US04 · Perfil de intereses: de 1 a 10 temas y una descripción opcional; ayudan a recomendar habilidades.
 @Composable

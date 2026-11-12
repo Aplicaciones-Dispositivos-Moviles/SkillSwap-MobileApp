@@ -41,13 +41,17 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.innovify.skillswap.model.beans.PathNode
-import com.innovify.skillswap.ui.theme.SkillBlue
-import com.innovify.skillswap.ui.theme.SkillBlueContainer
-import com.innovify.skillswap.ui.theme.Success
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
+import com.innovify.skillswap.shared.presentation.theme.Success
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.innovify.skillswap.shared.presentation.components.StatusChip
+import com.innovify.skillswap.shared.presentation.components.StepMarker
+import com.innovify.skillswap.shared.presentation.components.StepState
+import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 
 // Mock-up 07 · Mi ruta
 @Composable
@@ -202,7 +206,7 @@ fun PathList(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContro
                 // Una ruta pausada conserva su progreso, pero no se puede avanzar hasta reanudarla
                 if (path.status == "Paused") {
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = com.innovify.skillswap.ui.theme.WarningContainer),
+                        colors = CardDefaults.cardColors(containerColor = com.innovify.skillswap.shared.presentation.theme.WarningContainer),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 16.dp)

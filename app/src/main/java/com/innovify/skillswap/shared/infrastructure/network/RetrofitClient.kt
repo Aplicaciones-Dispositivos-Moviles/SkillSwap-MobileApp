@@ -1,4 +1,4 @@
-package com.innovify.skillswap.model.client
+package com.innovify.skillswap.shared.infrastructure.network
 
 import com.innovify.skillswap.model.response.WebService
 import okhttp3.OkHttpClient

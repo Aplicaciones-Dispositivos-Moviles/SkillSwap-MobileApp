@@ -6,9 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.fragment.app.FragmentActivity
-import com.innovify.skillswap.ui.theme.SkillSwapTheme
+import com.innovify.skillswap.shared.presentation.theme.SkillSwapTheme
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
-import com.innovify.skillswap.views.nav.NavSkillSwap
+import com.innovify.skillswap.shared.presentation.navigation.NavSkillSwap
 
 // FragmentActivity (y no ComponentActivity) porque BiometricPrompt lo exige; Compose funciona igual
 class MainActivity : FragmentActivity() {

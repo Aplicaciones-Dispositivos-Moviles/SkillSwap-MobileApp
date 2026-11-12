@@ -1,4 +1,4 @@
-package com.innovify.skillswap.ui.theme
+package com.innovify.skillswap.shared.presentation.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
@@ -6,6 +6,18 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.innovify.skillswap.shared.presentation.theme.AiContainer
+import com.innovify.skillswap.shared.presentation.theme.AiViolet
+import com.innovify.skillswap.shared.presentation.theme.Error
+import com.innovify.skillswap.shared.presentation.theme.ErrorContainer
+import com.innovify.skillswap.shared.presentation.theme.NeutralBorder
+import com.innovify.skillswap.shared.presentation.theme.NeutralSurface
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
+import com.innovify.skillswap.shared.presentation.theme.SkillBlueDark
+import com.innovify.skillswap.shared.presentation.theme.TextPrimary
+import com.innovify.skillswap.shared.presentation.theme.TextSecondary
+import com.innovify.skillswap.shared.presentation.theme.Typography
 
 private val LightColorScheme = lightColorScheme(
     primary = SkillBlue,

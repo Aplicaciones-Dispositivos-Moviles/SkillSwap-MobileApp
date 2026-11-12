@@ -34,13 +34,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
-import com.innovify.skillswap.ui.theme.NeutralBorder
-import com.innovify.skillswap.ui.theme.SkillBlue
-import com.innovify.skillswap.ui.theme.SkillBlueContainer
+import com.innovify.skillswap.shared.presentation.theme.NeutralBorder
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
+import com.innovify.skillswap.shared.presentation.components.StatusChip
+import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 
 // T50 (respuestas guardadas en el teléfono) + T51 (envío y reenvío al reconectar).
 @Composable

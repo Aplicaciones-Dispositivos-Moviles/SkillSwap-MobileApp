@@ -45,17 +45,17 @@ import com.innovify.skillswap.model.beans.FinalDemonstration
 import com.innovify.skillswap.model.beans.demonstrationStatusLabel
 import com.innovify.skillswap.model.beans.isFarEnoughAhead
 import com.innovify.skillswap.model.beans.modalityLabel
-import com.innovify.skillswap.ui.theme.Error
-import com.innovify.skillswap.ui.theme.ErrorContainer
-import com.innovify.skillswap.ui.theme.NeutralBorder
-import com.innovify.skillswap.ui.theme.NeutralSurface
-import com.innovify.skillswap.ui.theme.SkillBlue
-import com.innovify.skillswap.ui.theme.SkillBlueContainer
-import com.innovify.skillswap.ui.theme.Success
-import com.innovify.skillswap.ui.theme.SuccessContainer
-import com.innovify.skillswap.ui.theme.TextSecondary
-import com.innovify.skillswap.ui.theme.Warning
-import com.innovify.skillswap.ui.theme.WarningContainer
+import com.innovify.skillswap.shared.presentation.theme.Error
+import com.innovify.skillswap.shared.presentation.theme.ErrorContainer
+import com.innovify.skillswap.shared.presentation.theme.NeutralBorder
+import com.innovify.skillswap.shared.presentation.theme.NeutralSurface
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
+import com.innovify.skillswap.shared.presentation.theme.Success
+import com.innovify.skillswap.shared.presentation.theme.SuccessContainer
+import com.innovify.skillswap.shared.presentation.theme.TextSecondary
+import com.innovify.skillswap.shared.presentation.theme.Warning
+import com.innovify.skillswap.shared.presentation.theme.WarningContainer
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -67,6 +67,10 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
+import com.innovify.skillswap.shared.presentation.components.StatusChip
+import com.innovify.skillswap.shared.presentation.components.localDate
+import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 
 private const val TOO_SOON = "Elige un horario con al menos 24 horas de anticipación"
 

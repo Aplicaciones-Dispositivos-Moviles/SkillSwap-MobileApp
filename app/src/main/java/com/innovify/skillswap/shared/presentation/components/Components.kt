@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.shared.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -22,11 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.innovify.skillswap.ui.theme.NeutralSurface
-import com.innovify.skillswap.ui.theme.SkillBlue
-import com.innovify.skillswap.ui.theme.Success
-import com.innovify.skillswap.ui.theme.SuccessContainer
-import com.innovify.skillswap.ui.theme.TextSecondary
+import com.innovify.skillswap.shared.presentation.theme.NeutralSurface
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.Success
+import com.innovify.skillswap.shared.presentation.theme.SuccessContainer
+import com.innovify.skillswap.shared.presentation.theme.TextSecondary
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId

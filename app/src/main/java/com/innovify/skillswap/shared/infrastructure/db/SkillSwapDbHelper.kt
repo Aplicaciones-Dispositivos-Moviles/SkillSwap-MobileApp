@@ -1,4 +1,4 @@
-package com.innovify.skillswap.model.db
+package com.innovify.skillswap.shared.infrastructure.db
 
 import android.content.ContentValues
 import android.content.Context

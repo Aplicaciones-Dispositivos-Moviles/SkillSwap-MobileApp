@@ -42,20 +42,23 @@ import com.innovify.skillswap.model.beans.newPathDecision
 import com.innovify.skillswap.model.beans.nodeCount
 import com.innovify.skillswap.model.beans.pathStatusLabel
 import com.innovify.skillswap.model.beans.totalPathCount
-import com.innovify.skillswap.ui.theme.Error
-import com.innovify.skillswap.ui.theme.NeutralBorder
-import com.innovify.skillswap.ui.theme.NeutralSurface
-import com.innovify.skillswap.ui.theme.SkillBlue
-import com.innovify.skillswap.ui.theme.SkillBlueContainer
-import com.innovify.skillswap.ui.theme.Success
-import com.innovify.skillswap.ui.theme.SuccessContainer
-import com.innovify.skillswap.ui.theme.TextSecondary
-import com.innovify.skillswap.ui.theme.Warning
-import com.innovify.skillswap.ui.theme.WarningContainer
+import com.innovify.skillswap.shared.presentation.theme.Error
+import com.innovify.skillswap.shared.presentation.theme.NeutralBorder
+import com.innovify.skillswap.shared.presentation.theme.NeutralSurface
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
+import com.innovify.skillswap.shared.presentation.theme.Success
+import com.innovify.skillswap.shared.presentation.theme.SuccessContainer
+import com.innovify.skillswap.shared.presentation.theme.TextSecondary
+import com.innovify.skillswap.shared.presentation.theme.Warning
+import com.innovify.skillswap.shared.presentation.theme.WarningContainer
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
+import com.innovify.skillswap.shared.presentation.components.StatusChip
+import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 
 // Mis rutas: todas las rutas del Estudiante con su estado, cuántas permite su plan, y pausar, reanudar o abrir cada una.
 @Composable

@@ -37,13 +37,16 @@ import androidx.navigation.NavHostController
 import com.innovify.skillswap.model.beans.MAX_VIDEO_BYTES
 import com.innovify.skillswap.model.beans.MAX_VIDEO_SECONDS
 import com.innovify.skillswap.model.beans.modalityLabel
-import com.innovify.skillswap.ui.theme.Error
-import com.innovify.skillswap.ui.theme.TextSecondary
+import com.innovify.skillswap.shared.presentation.theme.Error
+import com.innovify.skillswap.shared.presentation.theme.TextSecondary
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
+import com.innovify.skillswap.shared.presentation.components.localDate
+import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 
 // US29 · Grabación y subida del video de la demostración final.
 // Usa la cámara del sistema (sin dependencias nuevas), pidiendo antes los permisos de cámara y micrófono.

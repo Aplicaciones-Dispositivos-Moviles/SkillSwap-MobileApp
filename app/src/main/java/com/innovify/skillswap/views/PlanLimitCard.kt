@@ -13,8 +13,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.innovify.skillswap.ui.theme.Warning
-import com.innovify.skillswap.ui.theme.WarningContainer
+import com.innovify.skillswap.shared.presentation.theme.Warning
+import com.innovify.skillswap.shared.presentation.theme.WarningContainer
 
 // Pantalla "Alcanzaste el límite de tu plan" (informe, escenario 6): ofrece pasar al plan mensual o continuar con el gratuito
 @Composable

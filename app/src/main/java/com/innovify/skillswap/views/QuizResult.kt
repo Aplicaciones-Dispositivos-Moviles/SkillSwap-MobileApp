@@ -37,17 +37,19 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.innovify.skillswap.ui.theme.Error
-import com.innovify.skillswap.ui.theme.ErrorContainer
-import com.innovify.skillswap.ui.theme.NeutralBorder
-import com.innovify.skillswap.ui.theme.SkillBlue
-import com.innovify.skillswap.ui.theme.SkillBlueContainer
-import com.innovify.skillswap.ui.theme.Success
-import com.innovify.skillswap.ui.theme.SuccessContainer
-import com.innovify.skillswap.ui.theme.TextSecondary
-import com.innovify.skillswap.ui.theme.Warning
-import com.innovify.skillswap.ui.theme.WarningContainer
+import com.innovify.skillswap.shared.presentation.theme.Error
+import com.innovify.skillswap.shared.presentation.theme.ErrorContainer
+import com.innovify.skillswap.shared.presentation.theme.NeutralBorder
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
+import com.innovify.skillswap.shared.presentation.theme.Success
+import com.innovify.skillswap.shared.presentation.theme.SuccessContainer
+import com.innovify.skillswap.shared.presentation.theme.TextSecondary
+import com.innovify.skillswap.shared.presentation.theme.Warning
+import com.innovify.skillswap.shared.presentation.theme.WarningContainer
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.shared.presentation.components.StatusChip
+import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 
 // T53 · Mock-up WF-06 #03 (quiz aprobado) y #05 (quiz no aprobado): resultado con el sub-tema a reforzar.
 @Composable

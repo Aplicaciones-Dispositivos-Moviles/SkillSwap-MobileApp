@@ -1,4 +1,4 @@
-package com.innovify.skillswap.ui.theme
+package com.innovify.skillswap.shared.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 

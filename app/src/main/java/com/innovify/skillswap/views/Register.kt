@@ -39,6 +39,8 @@ import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
+import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 
 // WF-01 · Registro de nuevo usuario (correo institucional .edu.pe)
 @Composable

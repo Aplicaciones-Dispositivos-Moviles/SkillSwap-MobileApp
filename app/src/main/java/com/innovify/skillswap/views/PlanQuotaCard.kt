@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.innovify.skillswap.ui.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
 
 // Una línea de la tarjeta: nombre, valor y, si hay tope, qué parte del cupo se usó (0 a 1)
 class QuotaItem(val label: String, val value: String, val progress: Float? = null)

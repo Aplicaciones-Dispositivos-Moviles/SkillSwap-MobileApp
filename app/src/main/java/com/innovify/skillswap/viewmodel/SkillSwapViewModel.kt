@@ -44,8 +44,8 @@ import com.innovify.skillswap.model.beans.SubmitAttemptRequest
 import com.innovify.skillswap.model.beans.SubmitMiniProjectRequest
 import com.innovify.skillswap.model.beans.VerificationCaseDetail
 import com.innovify.skillswap.model.beans.Wallet
-import com.innovify.skillswap.model.client.RetrofitClient
-import com.innovify.skillswap.model.db.SkillSwapDbHelper
+import com.innovify.skillswap.shared.infrastructure.network.RetrofitClient
+import com.innovify.skillswap.shared.infrastructure.db.SkillSwapDbHelper
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import kotlinx.coroutines.Dispatchers
@@ -55,6 +55,7 @@ import okhttp3.RequestBody
 import retrofit2.Response
 import java.io.File
 import java.time.Instant
+import com.innovify.skillswap.shared.infrastructure.connectivity.ConnectivityObserver
 
 class SkillSwapViewModel : ViewModel() {
 

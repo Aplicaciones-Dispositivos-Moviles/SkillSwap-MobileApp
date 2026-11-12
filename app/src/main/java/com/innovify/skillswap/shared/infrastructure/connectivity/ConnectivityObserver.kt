@@ -1,4 +1,4 @@
-package com.innovify.skillswap.viewmodel
+package com.innovify.skillswap.shared.infrastructure.connectivity
 
 import android.content.Context
 import android.net.ConnectivityManager
