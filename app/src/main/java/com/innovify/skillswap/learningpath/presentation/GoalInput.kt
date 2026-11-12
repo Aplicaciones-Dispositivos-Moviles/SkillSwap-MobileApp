@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.learningpath.presentation
 
 import android.content.Context
 import androidx.compose.foundation.horizontalScroll
@@ -40,6 +40,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.innovify.skillswap.shared.presentation.components.StatusChip
 import com.innovify.skillswap.shared.presentation.components.OfflineBanner
+import com.innovify.skillswap.learningpath.presentation.SkillConfirmation
 
 // Mock-up WF-03 #01 (meta) y #04 (meta a reformular): entrada a la confirmación de habilidad (T47).
 @Composable

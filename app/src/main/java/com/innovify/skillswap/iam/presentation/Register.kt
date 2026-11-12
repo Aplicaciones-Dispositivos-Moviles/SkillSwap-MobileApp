@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.iam.presentation
 
 import android.content.Context
 import android.widget.Toast
@@ -41,6 +41,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
 import com.innovify.skillswap.shared.presentation.components.OfflineBanner
+import com.innovify.skillswap.iam.presentation.Login
 
 // WF-01 · Registro de nuevo usuario (correo institucional .edu.pe)
 @Composable

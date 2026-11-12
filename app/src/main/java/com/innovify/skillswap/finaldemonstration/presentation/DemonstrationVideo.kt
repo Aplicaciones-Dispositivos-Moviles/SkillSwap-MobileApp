@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.finaldemonstration.presentation
 
 import android.Manifest
 import android.content.ActivityNotFoundException

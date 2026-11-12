@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.iam.presentation
 
 import android.content.Context
 import android.widget.Toast

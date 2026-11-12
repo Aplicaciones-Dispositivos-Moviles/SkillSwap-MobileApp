@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.learningpath.presentation
 
 import android.content.Context
 import android.widget.Toast
@@ -52,6 +52,9 @@ import com.innovify.skillswap.shared.presentation.components.StatusChip
 import com.innovify.skillswap.shared.presentation.components.StepMarker
 import com.innovify.skillswap.shared.presentation.components.StepState
 import com.innovify.skillswap.shared.presentation.components.OfflineBanner
+import com.innovify.skillswap.iam.presentation.Profile
+import com.innovify.skillswap.finaldemonstration.presentation.Demonstration
+import com.innovify.skillswap.learningpath.presentation.MyPaths
 
 // Mock-up 07 · Mi ruta
 @Composable

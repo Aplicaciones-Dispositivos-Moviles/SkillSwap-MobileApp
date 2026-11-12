@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.assessment.presentation
 
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
@@ -50,6 +50,8 @@ import com.innovify.skillswap.shared.presentation.theme.WarningContainer
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import com.innovify.skillswap.shared.presentation.components.StatusChip
 import com.innovify.skillswap.shared.presentation.components.OfflineBanner
+import com.innovify.skillswap.assessment.presentation.Quiz
+import com.innovify.skillswap.assessment.presentation.CaseStatus
 
 // T53 · Mock-up WF-06 #03 (quiz aprobado) y #05 (quiz no aprobado): resultado con el sub-tema a reforzar.
 @Composable

@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.finaldemonstration.presentation
 
 import android.content.Context
 import android.widget.Toast
@@ -71,6 +71,7 @@ import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
 import com.innovify.skillswap.shared.presentation.components.StatusChip
 import com.innovify.skillswap.shared.presentation.components.localDate
 import com.innovify.skillswap.shared.presentation.components.OfflineBanner
+import com.innovify.skillswap.finaldemonstration.presentation.DemonstrationVideo
 
 private const val TOO_SOON = "Elige un horario con al menos 24 horas de anticipación"
 

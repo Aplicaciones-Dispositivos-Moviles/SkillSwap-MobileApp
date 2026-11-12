@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.iam.presentation
 
 import android.content.Context
 import android.widget.Toast
@@ -53,6 +53,8 @@ import kotlinx.coroutines.withContext
 import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
 import com.innovify.skillswap.shared.presentation.components.localDate
 import com.innovify.skillswap.shared.presentation.components.OfflineBanner
+import com.innovify.skillswap.iam.presentation.Interests
+import com.innovify.skillswap.subscription.presentation.MyPlan
 
 // Perfil / Billetera (solo lectura): cuenta, saldo de SkillCredits y movimientos, todo del backend.
 @Composable

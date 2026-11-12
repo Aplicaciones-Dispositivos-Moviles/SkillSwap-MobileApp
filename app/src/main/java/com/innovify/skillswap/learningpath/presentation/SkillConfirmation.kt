@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.learningpath.presentation
 
 import android.content.Context
 import android.widget.Toast
@@ -47,6 +47,9 @@ import kotlinx.coroutines.withContext
 import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
 import com.innovify.skillswap.shared.presentation.components.StatusChip
 import com.innovify.skillswap.shared.presentation.components.OfflineBanner
+import com.innovify.skillswap.learningpath.presentation.MyPaths
+import com.innovify.skillswap.subscription.presentation.MyPlan
+import com.innovify.skillswap.subscription.presentation.PlanLimitCard
 
 // T47 · Mock-up WF-03 #02: el Estudiante elige y confirma la habilidad antes de construir la ruta.
 @Composable

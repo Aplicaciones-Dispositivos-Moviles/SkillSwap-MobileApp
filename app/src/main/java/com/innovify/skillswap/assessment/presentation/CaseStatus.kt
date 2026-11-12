@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.assessment.presentation
 
 import android.content.Context
 import android.widget.Toast
@@ -54,6 +54,7 @@ import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
 import com.innovify.skillswap.shared.presentation.components.StatusChip
 import com.innovify.skillswap.shared.presentation.components.localDate
 import com.innovify.skillswap.shared.presentation.components.OfflineBanner
+import com.innovify.skillswap.assessment.presentation.Quiz
 
 // Texto y colores del estado del caso (nunca solo color: el chip siempre lleva texto)
 private class CaseLook(val label: String, val message: String, val color: Color, val container: Color)

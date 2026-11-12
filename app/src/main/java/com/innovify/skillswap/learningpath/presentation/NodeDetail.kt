@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.learningpath.presentation
 
 import android.content.Context
 import android.widget.Toast
@@ -47,6 +47,8 @@ import java.io.File
 import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
 import com.innovify.skillswap.shared.presentation.components.StatusChip
 import com.innovify.skillswap.shared.presentation.components.OfflineBanner
+import com.innovify.skillswap.assessment.presentation.Quiz
+import com.innovify.skillswap.assessment.presentation.QuizResult
 
 // Mock-up 08 · Detalle del nodo
 @Composable

@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.iam.presentation
 
 import android.content.Context
 import android.widget.Toast
@@ -47,6 +47,7 @@ import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.innovify.skillswap.iam.presentation.Register
 
 // Mock-up 03 · Inicio de sesión
 @Composable

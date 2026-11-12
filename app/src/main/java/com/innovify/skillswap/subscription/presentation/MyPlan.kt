@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.subscription.presentation
 
 import android.content.Context
 import android.widget.Toast
@@ -49,6 +49,9 @@ import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
 import com.innovify.skillswap.shared.presentation.components.StatusChip
 import com.innovify.skillswap.shared.presentation.components.localDate
 import com.innovify.skillswap.shared.presentation.components.OfflineBanner
+import com.innovify.skillswap.learningpath.presentation.MyPaths
+import com.innovify.skillswap.subscription.presentation.PlanQuotaCard
+import com.innovify.skillswap.subscription.presentation.QuotaItem
 
 // US05 · Mi plan: plan vigente (Free o Premium), sus límites, y activar o cancelar Premium (cobro simulado).
 @Composable

@@ -1,4 +1,4 @@
-package com.innovify.skillswap.views
+package com.innovify.skillswap.learningpath.presentation
 
 import android.content.Context
 import android.widget.Toast
@@ -59,6 +59,10 @@ import kotlinx.coroutines.withContext
 import com.innovify.skillswap.shared.presentation.components.ScreenTopBar
 import com.innovify.skillswap.shared.presentation.components.StatusChip
 import com.innovify.skillswap.shared.presentation.components.OfflineBanner
+import com.innovify.skillswap.subscription.presentation.MyPlan
+import com.innovify.skillswap.subscription.presentation.PlanLimitCard
+import com.innovify.skillswap.subscription.presentation.PlanQuotaCard
+import com.innovify.skillswap.subscription.presentation.QuotaItem
 
 // Mis rutas: todas las rutas del Estudiante con su estado, cuántas permite su plan, y pausar, reanudar o abrir cada una.
 @Composable
