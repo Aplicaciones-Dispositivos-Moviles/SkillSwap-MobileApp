@@ -40,7 +40,8 @@ import com.innovify.skillswap.shared.presentation.theme.NeutralSurface
 import com.innovify.skillswap.shared.presentation.theme.SkillBlue
 import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.learningpath.application.LearningPathViewModel
+import com.innovify.skillswap.subscription.application.SubscriptionViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,7 +54,12 @@ import com.innovify.skillswap.subscription.presentation.PlanLimitCard
 
 // T47 · Mock-up WF-03 #02: el Estudiante elige y confirma la habilidad antes de construir la ruta.
 @Composable
-fun SkillConfirmation(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun SkillConfirmation(
+    viewModel: LearningPathViewModel,
+    subscriptionViewModel: SubscriptionViewModel,
+    context: Context,
+    nav: NavHostController
+) {
 
     val options = viewModel.skillOptions
     // Por defecto queda elegida la de mayor afinidad (la primera)
@@ -69,7 +75,7 @@ fun SkillConfirmation(viewModel: SkillSwapViewModel, context: Context, nav: NavH
             .padding(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
         ScreenTopBar(title = "Confirma tu habilidad", onBack = { nav.popBackStack() })
-        OfflineBanner(viewModel)
+        OfflineBanner(viewModel.connectivity, viewModel.showingCache)
 
         Column(modifier = Modifier.padding(start = 8.dp)) {
             // La meta escrita; el lápiz vuelve a editarla
@@ -122,7 +128,7 @@ fun SkillConfirmation(viewModel: SkillSwapViewModel, context: Context, nav: NavH
             if (limitMessage != null) {
                 PlanLimitCard(
                     message = limitMessage ?: "",
-                    showUpgrade = viewModel.plan?.plan != "Premium",
+                    showUpgrade = subscriptionViewModel.plan?.plan != "Premium",
                     onUpgrade = { nav.navigate("MyPlan") },
                     onContinue = { nav.navigate("MyPaths") }
                 )
@@ -141,8 +147,8 @@ fun SkillConfirmation(viewModel: SkillSwapViewModel, context: Context, nav: NavH
                             if (ok) {
                                 // WF-03 #03: la ruta generada reemplaza todo el flujo de la meta
                                 nav.navigate("Path") { popUpTo(0) }
-                            } else if (viewModel.planLimitMessage != null) {
-                                limitMessage = viewModel.planLimitMessage
+                            } else if (subscriptionViewModel.planLimitMessage != null) {
+                                limitMessage = subscriptionViewModel.planLimitMessage
                             } else {
                                 Toast.makeText(context, viewModel.errorMessage, Toast.LENGTH_LONG).show()
                             }

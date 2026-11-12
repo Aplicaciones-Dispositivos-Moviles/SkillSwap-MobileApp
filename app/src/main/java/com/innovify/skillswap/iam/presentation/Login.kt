@@ -43,7 +43,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.innovify.skillswap.shared.presentation.theme.SkillBlue
 import com.innovify.skillswap.iam.infrastructure.BiometricVault
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.iam.application.SessionViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -51,7 +51,7 @@ import com.innovify.skillswap.iam.presentation.Register
 
 // Mock-up 03 · Inicio de sesión
 @Composable
-fun Login(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun Login(viewModel: SessionViewModel, context: Context, nav: NavHostController) {
 
     var username by remember { mutableStateOf(viewModel.registeredUsername) }
     var password by remember { mutableStateOf("") }

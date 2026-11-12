@@ -49,7 +49,9 @@ import com.innovify.skillswap.shared.presentation.theme.SuccessContainer
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary
 import com.innovify.skillswap.shared.presentation.theme.Warning
 import com.innovify.skillswap.shared.presentation.theme.WarningContainer
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.learningpath.application.LearningPathViewModel
+import com.innovify.skillswap.assessment.application.MiniProjectViewModel
+import com.innovify.skillswap.assessment.application.VerificationCaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -94,9 +96,15 @@ private fun clearDraft(context: Context, projectId: Int) {
 
 // T55 · Mock-up WF-07 #02 (miniproyecto), #03 (entrega enviada), #05 (entrega incompleta) y #06 (borrador).
 @Composable
-fun ProjectDelivery(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun ProjectDelivery(
+    viewModel: MiniProjectViewModel,
+    learningPathViewModel: LearningPathViewModel,
+    verificationCaseViewModel: VerificationCaseViewModel,
+    context: Context,
+    nav: NavHostController
+) {
 
-    val node = viewModel.selectedNode
+    val node = learningPathViewModel.selectedNode
     var loading by remember { mutableStateOf(true) }
     var sending by remember { mutableStateOf(false) }
     var repositoryUrl by rememberSaveable { mutableStateOf("") }
@@ -153,7 +161,7 @@ fun ProjectDelivery(viewModel: SkillSwapViewModel, context: Context, nav: NavHos
             title = if (node != null) "Miniproyecto · Nodo ${node.order}" else "Miniproyecto",
             onBack = { nav.popBackStack() }
         )
-        OfflineBanner(viewModel)
+        OfflineBanner(viewModel.connectivity, viewModel.showingCache)
 
         val project = viewModel.project
         if (loading) {
@@ -243,7 +251,7 @@ fun ProjectDelivery(viewModel: SkillSwapViewModel, context: Context, nav: NavHos
                             evalRetry += 1
                         },
                         onViewCase = { caseId ->
-                            viewModel.selectedCaseId = caseId
+                            verificationCaseViewModel.selectedCaseId = caseId
                             nav.navigate("CaseStatus")
                         },
                         onContinue = { nav.popBackStack("Path", false) }

@@ -41,7 +41,7 @@ import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
 import com.innovify.skillswap.shared.presentation.theme.Success
 import com.innovify.skillswap.shared.presentation.theme.SuccessContainer
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.subscription.application.SubscriptionViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,7 +55,7 @@ import com.innovify.skillswap.subscription.presentation.QuotaItem
 
 // US05 · Mi plan: plan vigente (Free o Premium), sus límites, y activar o cancelar Premium (cobro simulado).
 @Composable
-fun MyPlan(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun MyPlan(viewModel: SubscriptionViewModel, context: Context, nav: NavHostController) {
 
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -134,7 +134,7 @@ fun MyPlan(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControll
             .padding(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
         ScreenTopBar(title = "Mi plan", onBack = { nav.popBackStack() })
-        OfflineBanner(viewModel)
+        OfflineBanner(viewModel.connectivity, viewModel.showingCache)
 
         Column(modifier = Modifier.padding(start = 8.dp)) {
             if (loading && plan == null) {

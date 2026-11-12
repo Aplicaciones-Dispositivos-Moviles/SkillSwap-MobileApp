@@ -39,7 +39,7 @@ import com.innovify.skillswap.finaldemonstration.domain.MAX_VIDEO_SECONDS
 import com.innovify.skillswap.finaldemonstration.domain.modalityLabel
 import com.innovify.skillswap.shared.presentation.theme.Error
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.finaldemonstration.application.FinalDemonstrationViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -51,7 +51,7 @@ import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 // US29 · Grabación y subida del video de la demostración final.
 // Usa la cámara del sistema (sin dependencias nuevas), pidiendo antes los permisos de cámara y micrófono.
 @Composable
-fun DemonstrationVideo(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun DemonstrationVideo(viewModel: FinalDemonstrationViewModel, context: Context, nav: NavHostController) {
 
     val demo = viewModel.demonstration
     // Rutas guardadas con rememberSaveable: la app de cámara puede hacer que Android recree esta pantalla
@@ -116,7 +116,7 @@ fun DemonstrationVideo(viewModel: SkillSwapViewModel, context: Context, nav: Nav
             .padding(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
         ScreenTopBar(title = "Video de tu demostración", onBack = { nav.popBackStack() })
-        OfflineBanner(viewModel)
+        OfflineBanner(viewModel.connectivity, viewModel.showingCache)
 
         Column(modifier = Modifier.padding(start = 8.dp)) {
             if (demo == null || !demo.canUploadVideo()) {

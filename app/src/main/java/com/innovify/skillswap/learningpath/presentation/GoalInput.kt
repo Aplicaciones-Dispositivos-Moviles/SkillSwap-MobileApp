@@ -34,7 +34,7 @@ import androidx.navigation.NavHostController
 import com.innovify.skillswap.shared.presentation.theme.AiContainer
 import com.innovify.skillswap.shared.presentation.theme.AiViolet
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.learningpath.application.LearningPathViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,7 +44,7 @@ import com.innovify.skillswap.learningpath.presentation.SkillConfirmation
 
 // Mock-up WF-03 #01 (meta) y #04 (meta a reformular): entrada a la confirmación de habilidad (T47).
 @Composable
-fun GoalInput(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun GoalInput(viewModel: LearningPathViewModel, context: Context, nav: NavHostController) {
 
     var goal by rememberSaveable { mutableStateOf(viewModel.goal) }
     var goalError by remember { mutableStateOf<String?>(null) }
@@ -63,7 +63,7 @@ fun GoalInput(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContr
             }
             Text(text = "Nueva ruta", style = MaterialTheme.typography.titleMedium)
         }
-        OfflineBanner(viewModel)
+        OfflineBanner(viewModel.connectivity, viewModel.showingCache)
 
         Column(modifier = Modifier.padding(start = 8.dp)) {
             StatusChip(text = "Asistente de rutas con IA", color = AiViolet, container = AiContainer)

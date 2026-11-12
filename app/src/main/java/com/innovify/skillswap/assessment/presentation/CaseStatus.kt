@@ -46,7 +46,7 @@ import com.innovify.skillswap.shared.presentation.theme.SuccessContainer
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary
 import com.innovify.skillswap.shared.presentation.theme.Warning
 import com.innovify.skillswap.shared.presentation.theme.WarningContainer
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.assessment.application.VerificationCaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -83,7 +83,7 @@ private fun lookOf(case: VerificationCase): CaseLook {
 
 // WF-08 (mock-up 20 "Estado del caso"): estado, decisión y notas del Verificador, preguntas falladas y apelación.
 @Composable
-fun CaseStatus(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun CaseStatus(viewModel: VerificationCaseViewModel, context: Context, nav: NavHostController) {
 
     val caseId = viewModel.selectedCaseId
     var loading by remember { mutableStateOf(true) }
@@ -118,7 +118,7 @@ fun CaseStatus(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
             .padding(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
         ScreenTopBar(title = "Estado del caso", onBack = { nav.popBackStack() })
-        OfflineBanner(viewModel)
+        OfflineBanner(viewModel.connectivity, viewModel.showingCache)
 
         // Solo se muestra el detalle del caso que se pidió (no uno anterior)
         val detail = viewModel.caseDetail?.takeIf { it.verificationCase.id == caseId }

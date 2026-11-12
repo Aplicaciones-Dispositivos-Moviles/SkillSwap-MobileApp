@@ -44,7 +44,8 @@ import com.innovify.skillswap.learningpath.domain.PathNode
 import com.innovify.skillswap.shared.presentation.theme.SkillBlue
 import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
 import com.innovify.skillswap.shared.presentation.theme.Success
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.learningpath.application.LearningPathViewModel
+import com.innovify.skillswap.iam.application.SessionViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -58,7 +59,12 @@ import com.innovify.skillswap.learningpath.presentation.MyPaths
 
 // Mock-up 07 · Mi ruta
 @Composable
-fun PathList(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun PathList(
+    viewModel: LearningPathViewModel,
+    sessionViewModel: SessionViewModel,
+    context: Context,
+    nav: NavHostController
+) {
 
     var loading by remember { mutableStateOf(true) }
     var resuming by remember { mutableStateOf(false) }
@@ -86,7 +92,7 @@ fun PathList(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContro
         )
     ) {
         item {
-            OfflineBanner(viewModel)
+            OfflineBanner(viewModel.connectivity, viewModel.showingCache)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -94,14 +100,14 @@ fun PathList(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContro
                     .padding(bottom = 16.dp)
             ) {
                 Text(
-                    text = "Hola, ${viewModel.user?.username ?: ""}",
+                    text = "Hola, ${sessionViewModel.user?.username ?: ""}",
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.weight(1f)
                 )
                 TextButton(onClick = { nav.navigate("Profile") }) {
                     Text(text = "Mi perfil")
                 }
-                TextButton(onClick = { viewModel.signOut(context) }) {
+                TextButton(onClick = { sessionViewModel.signOut(context) }) {
                     Text(text = "Salir")
                 }
             }

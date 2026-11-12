@@ -46,7 +46,8 @@ import com.innovify.skillswap.shared.presentation.theme.Success
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary
 import com.innovify.skillswap.shared.presentation.theme.Warning
 import com.innovify.skillswap.shared.presentation.theme.WarningContainer
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.iam.application.SessionViewModel
+import com.innovify.skillswap.reputation.application.WalletViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -58,7 +59,12 @@ import com.innovify.skillswap.subscription.presentation.MyPlan
 
 // Perfil / Billetera (solo lectura): cuenta, saldo de SkillCredits y movimientos, todo del backend.
 @Composable
-fun Profile(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun Profile(
+    viewModel: SessionViewModel,
+    walletViewModel: WalletViewModel,
+    context: Context,
+    nav: NavHostController
+) {
 
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -68,7 +74,7 @@ fun Profile(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControl
         error = null
         // La red va en hilo IO (como en la plantilla del profe)
         viewModel.viewModelScope.launch(Dispatchers.IO) {
-            val ok = viewModel.loadWallet()
+            val ok = walletViewModel.loadWallet()
             withContext(Dispatchers.Main) {
                 loading = false
                 error = if (ok) null else viewModel.errorMessage
@@ -143,8 +149,8 @@ fun Profile(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControl
         )
     }
 
-    val wallet = viewModel.wallet
-    val transactions = viewModel.transactions
+    val wallet = walletViewModel.wallet
+    val transactions = walletViewModel.transactions
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -152,7 +158,7 @@ fun Profile(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControl
     ) {
         item {
             ScreenTopBar(title = "Mi perfil", onBack = { nav.popBackStack() })
-            OfflineBanner(viewModel)
+            OfflineBanner(viewModel.connectivity, viewModel.showingCache)
             Column(modifier = Modifier.padding(start = 8.dp)) {
                 Text(
                     text = viewModel.user?.username ?: "",

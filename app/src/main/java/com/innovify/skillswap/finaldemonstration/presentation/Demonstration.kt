@@ -56,7 +56,7 @@ import com.innovify.skillswap.shared.presentation.theme.SuccessContainer
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary
 import com.innovify.skillswap.shared.presentation.theme.Warning
 import com.innovify.skillswap.shared.presentation.theme.WarningContainer
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.finaldemonstration.application.FinalDemonstrationViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -78,7 +78,7 @@ private const val TOO_SOON = "Elige un horario con al menos 24 horas de anticipa
 // US28 · Programación de la demostración final: modalidad, fecha y hora; luego muestra su estado y el resultado.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Demonstration(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun Demonstration(viewModel: FinalDemonstrationViewModel, context: Context, nav: NavHostController) {
 
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -172,7 +172,7 @@ fun Demonstration(viewModel: SkillSwapViewModel, context: Context, nav: NavHostC
             .padding(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
         ScreenTopBar(title = "Demostración final", onBack = { nav.popBackStack() })
-        OfflineBanner(viewModel)
+        OfflineBanner(viewModel.connectivity, viewModel.showingCache)
 
         Column(modifier = Modifier.padding(start = 8.dp)) {
             if (loading) {

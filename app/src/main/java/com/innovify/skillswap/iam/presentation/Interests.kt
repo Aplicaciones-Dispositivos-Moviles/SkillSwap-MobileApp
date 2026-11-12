@@ -36,7 +36,7 @@ import com.innovify.skillswap.iam.domain.interestError
 import com.innovify.skillswap.shared.presentation.theme.Error
 import com.innovify.skillswap.shared.presentation.theme.NeutralBorder
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.iam.application.InterestsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -45,7 +45,7 @@ import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 
 // US04 · Perfil de intereses: de 1 a 10 temas y una descripción opcional; ayudan a recomendar habilidades.
 @Composable
-fun Interests(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun Interests(viewModel: InterestsViewModel, context: Context, nav: NavHostController) {
 
     var loading by remember { mutableStateOf(true) }
     var saving by remember { mutableStateOf(false) }
@@ -84,7 +84,7 @@ fun Interests(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContr
             .padding(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
         ScreenTopBar(title = "Mis intereses", onBack = { nav.popBackStack() })
-        OfflineBanner(viewModel)
+        OfflineBanner(viewModel.connectivity, viewModel.showingCache)
 
         Column(modifier = Modifier.padding(start = 8.dp)) {
             Text(

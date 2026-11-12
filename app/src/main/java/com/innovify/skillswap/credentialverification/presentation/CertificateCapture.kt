@@ -47,7 +47,8 @@ import com.innovify.skillswap.shared.presentation.theme.SkillBlue
 import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
 import com.innovify.skillswap.credentialverification.infrastructure.CertificateOcr
 import com.innovify.skillswap.credentialverification.domain.CertificateParser
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.credentialverification.application.CertificateViewModel
+import com.innovify.skillswap.learningpath.application.LearningPathViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -62,9 +63,14 @@ import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 // El certificado puede venir de la cámara o de un archivo (PDF o imagen) elegido del teléfono.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CertificateCapture(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun CertificateCapture(
+    viewModel: CertificateViewModel,
+    learningPathViewModel: LearningPathViewModel,
+    context: Context,
+    nav: NavHostController
+) {
 
-    val node = viewModel.selectedNode
+    val node = learningPathViewModel.selectedNode
 
     var photoUri: Uri? by rememberSaveable { mutableStateOf(null) }  // foto o archivo ya elegido
     var cameraUri: Uri? by rememberSaveable { mutableStateOf(null) } // destino que se le pasa a la cámara
@@ -140,7 +146,7 @@ fun CertificateCapture(viewModel: SkillSwapViewModel, context: Context, nav: Nav
             .padding(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
         ScreenTopBar(title = "Subir certificado", onBack = { nav.popBackStack() })
-        OfflineBanner(viewModel)
+        OfflineBanner(viewModel.connectivity, viewModel.showingCache)
         Text(
             text = "Habilidad: ${node?.skillName ?: "—"}",
             style = MaterialTheme.typography.bodyMedium,
@@ -322,7 +328,7 @@ fun CertificateCapture(viewModel: SkillSwapViewModel, context: Context, nav: Nav
         // 422: el certificado no cubre este nodo; se muestran los nodos de la ruta que sí cubre
         val mismatch = viewModel.certificateMismatch
         if (mismatch != null) {
-            val nodes = viewModel.path?.nodes ?: emptyList()
+            val nodes = learningPathViewModel.path?.nodes ?: emptyList()
             MismatchCard(
                 skillName = node?.skillName ?: "este nodo",
                 mismatch = mismatch,

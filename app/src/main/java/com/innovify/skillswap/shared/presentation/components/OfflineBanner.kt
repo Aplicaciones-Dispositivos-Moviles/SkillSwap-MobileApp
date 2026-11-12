@@ -9,13 +9,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.shared.infrastructure.connectivity.ConnectivityObserver
 
 // T49: franja que avisa que se están mostrando datos guardados. No se dibuja si hay conexión.
 @Composable
-fun OfflineBanner(viewModel: SkillSwapViewModel) {
-    val offline = !viewModel.connectivity.isOnline
-    if (offline || viewModel.showingCache) {
+fun OfflineBanner(connectivity: ConnectivityObserver, showingCache: Boolean) {
+    val offline = !connectivity.isOnline
+    if (offline || showingCache) {
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
             modifier = Modifier

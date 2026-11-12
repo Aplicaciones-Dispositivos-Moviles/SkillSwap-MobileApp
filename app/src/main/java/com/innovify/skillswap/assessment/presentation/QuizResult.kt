@@ -47,7 +47,8 @@ import com.innovify.skillswap.shared.presentation.theme.SuccessContainer
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary
 import com.innovify.skillswap.shared.presentation.theme.Warning
 import com.innovify.skillswap.shared.presentation.theme.WarningContainer
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.assessment.application.QuizViewModel
+import com.innovify.skillswap.assessment.application.VerificationCaseViewModel
 import com.innovify.skillswap.shared.presentation.components.StatusChip
 import com.innovify.skillswap.shared.presentation.components.OfflineBanner
 import com.innovify.skillswap.assessment.presentation.Quiz
@@ -55,7 +56,12 @@ import com.innovify.skillswap.assessment.presentation.CaseStatus
 
 // T53 · Mock-up WF-06 #03 (quiz aprobado) y #05 (quiz no aprobado): resultado con el sub-tema a reforzar.
 @Composable
-fun QuizResult(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun QuizResult(
+    viewModel: QuizViewModel,
+    verificationCaseViewModel: VerificationCaseViewModel,
+    context: Context,
+    nav: NavHostController
+) {
 
     val result = viewModel.attemptResult
     val quiz = viewModel.blueprint
@@ -70,7 +76,7 @@ fun QuizResult(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
         IconButton(onClick = { nav.popBackStack("Path", false) }) {
             Icon(imageVector = Icons.Filled.Close, contentDescription = "Cerrar")
         }
-        OfflineBanner(viewModel)
+        OfflineBanner(viewModel.connectivity, viewModel.showingCache)
 
         if (result == null) {
             Text(
@@ -226,7 +232,7 @@ fun QuizResult(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
                     // WF-08: desde aquí el Estudiante ve el estado del caso y las preguntas que falló
                     actionLabel = "Ver estado del caso",
                     onAction = {
-                        viewModel.selectedCaseId = caseId
+                        verificationCaseViewModel.selectedCaseId = caseId
                         nav.navigate("CaseStatus")
                     }
                 )

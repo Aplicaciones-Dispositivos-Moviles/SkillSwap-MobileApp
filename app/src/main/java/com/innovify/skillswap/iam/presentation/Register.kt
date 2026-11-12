@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.innovify.skillswap.iam.domain.SignUpValidator
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.iam.application.SessionViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -45,7 +45,7 @@ import com.innovify.skillswap.iam.presentation.Login
 
 // WF-01 · Registro de nuevo usuario (correo institucional .edu.pe)
 @Composable
-fun Register(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun Register(viewModel: SessionViewModel, context: Context, nav: NavHostController) {
 
     var username by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
@@ -61,7 +61,7 @@ fun Register(viewModel: SkillSwapViewModel, context: Context, nav: NavHostContro
             .padding(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
         ScreenTopBar(title = "Crear cuenta", onBack = { nav.popBackStack() })
-        OfflineBanner(viewModel)
+        OfflineBanner(viewModel.connectivity, viewModel.showingCache)
 
         Text(
             text = "Regístrate con tu correo institucional",

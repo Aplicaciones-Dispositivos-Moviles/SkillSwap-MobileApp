@@ -37,7 +37,8 @@ import androidx.navigation.NavHostController
 import com.innovify.skillswap.shared.presentation.theme.NeutralBorder
 import com.innovify.skillswap.shared.presentation.theme.SkillBlue
 import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.learningpath.application.LearningPathViewModel
+import com.innovify.skillswap.assessment.application.QuizViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -48,9 +49,14 @@ import com.innovify.skillswap.assessment.presentation.QuizResult
 
 // T50 (respuestas guardadas en el teléfono) + T51 (envío y reenvío al reconectar).
 @Composable
-fun Quiz(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun Quiz(
+    viewModel: QuizViewModel,
+    learningPathViewModel: LearningPathViewModel,
+    context: Context,
+    nav: NavHostController
+) {
 
-    val node = viewModel.selectedNode
+    val node = learningPathViewModel.selectedNode
     var loading by remember { mutableStateOf(true) }
     var sending by remember { mutableStateOf(false) }
     // Reenvío de un quiz "Pending": se intenta solo al abrir la pantalla y también a mano
@@ -103,7 +109,7 @@ fun Quiz(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController
             .padding(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
         ScreenTopBar(title = "Quiz", onBack = { nav.popBackStack() })
-        OfflineBanner(viewModel)
+        OfflineBanner(viewModel.connectivity, viewModel.showingCache)
 
         val quiz = viewModel.blueprint
         if (loading) {

@@ -39,7 +39,10 @@ import com.innovify.skillswap.shared.presentation.theme.NeutralSurface
 import com.innovify.skillswap.shared.presentation.theme.SkillBlue
 import com.innovify.skillswap.shared.presentation.theme.Success
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.credentialverification.application.CertificateViewModel
+import com.innovify.skillswap.learningpath.application.LearningPathViewModel
+import com.innovify.skillswap.assessment.application.QuizViewModel
+import com.innovify.skillswap.assessment.application.VerificationCaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -52,7 +55,14 @@ import com.innovify.skillswap.assessment.presentation.QuizResult
 
 // Mock-up 08 · Detalle del nodo
 @Composable
-fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun NodeDetail(
+    viewModel: LearningPathViewModel,
+    quizViewModel: QuizViewModel,
+    certificateViewModel: CertificateViewModel,
+    verificationCaseViewModel: VerificationCaseViewModel,
+    context: Context,
+    nav: NavHostController
+) {
 
     val node = viewModel.selectedNode
 
@@ -60,16 +70,16 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
     LaunchedEffect(node?.id) {
         val nodeId = node?.id ?: return@LaunchedEffect
         viewModel.viewModelScope.launch(Dispatchers.IO) {
-            viewModel.loadLocalCertificate(context, nodeId)
+            certificateViewModel.loadLocalCertificate(context, nodeId)
         }
     }
 
     // Si el nodo ya tiene un quiz calificado se ofrece volver a ver su resultado (Rendir quiz pide uno nuevo)
     var hasQuizResult by remember { mutableStateOf(false) }
-    LaunchedEffect(node?.id, viewModel.quizStatus, viewModel.attemptResult) {
+    LaunchedEffect(node?.id, quizViewModel.quizStatus, quizViewModel.attemptResult) {
         val nodeId = node?.id ?: return@LaunchedEffect
         viewModel.viewModelScope.launch(Dispatchers.IO) {
-            val has = viewModel.hasQuizResult(context, nodeId)
+            val has = quizViewModel.hasQuizResult(context, nodeId)
             withContext(Dispatchers.Main) { hasQuizResult = has }
         }
     }
@@ -89,7 +99,7 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
         )
 
         Column(modifier = Modifier.padding(start = 8.dp)) {
-            OfflineBanner(viewModel)
+            OfflineBanner(viewModel.connectivity, viewModel.showingCache)
 
             if (node == null) {
                 Text(text = "Selecciona un nodo desde la ruta.", style = MaterialTheme.typography.bodyLarge)
@@ -141,7 +151,7 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                val local = viewModel.localCertificate
+                val local = certificateViewModel.localCertificate
                 if (local != null && local.nodeId == node.id) {
                     Text(
                         text = "Copia en el teléfono: " + File(local.filePath).name +
@@ -195,7 +205,7 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
                         OutlinedButton(
                             onClick = {
                                 viewModel.viewModelScope.launch(Dispatchers.IO) {
-                                    val ok = viewModel.openLastResult(context, node.id)
+                                    val ok = quizViewModel.openLastResult(context, node.id)
                                     withContext(Dispatchers.Main) {
                                         if (ok) nav.navigate("QuizResult")
                                         else Toast.makeText(context, viewModel.errorMessage, Toast.LENGTH_LONG).show()
@@ -229,7 +239,7 @@ fun NodeDetail(viewModel: SkillSwapViewModel, context: Context, nav: NavHostCont
                             onClick = {
                                 enabling = true
                                 viewModel.viewModelScope.launch(Dispatchers.IO) {
-                                    val message = viewModel.enableAsVerifier(node.skillTag)
+                                    val message = verificationCaseViewModel.enableAsVerifier(node.skillTag)
                                     withContext(Dispatchers.Main) {
                                         enabling = false
                                         Toast.makeText(context, message, Toast.LENGTH_LONG).show()

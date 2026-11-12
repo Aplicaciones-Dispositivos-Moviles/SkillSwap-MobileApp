@@ -52,7 +52,8 @@ import com.innovify.skillswap.shared.presentation.theme.SuccessContainer
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary
 import com.innovify.skillswap.shared.presentation.theme.Warning
 import com.innovify.skillswap.shared.presentation.theme.WarningContainer
-import com.innovify.skillswap.viewmodel.SkillSwapViewModel
+import com.innovify.skillswap.learningpath.application.LearningPathViewModel
+import com.innovify.skillswap.subscription.application.SubscriptionViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -66,7 +67,12 @@ import com.innovify.skillswap.subscription.presentation.QuotaItem
 
 // Mis rutas: todas las rutas del Estudiante con su estado, cuántas permite su plan, y pausar, reanudar o abrir cada una.
 @Composable
-fun MyPaths(viewModel: SkillSwapViewModel, context: Context, nav: NavHostController) {
+fun MyPaths(
+    viewModel: LearningPathViewModel,
+    subscriptionViewModel: SubscriptionViewModel,
+    context: Context,
+    nav: NavHostController
+) {
 
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -103,7 +109,7 @@ fun MyPaths(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControl
 
     LaunchedEffect(Unit) { load() }
 
-    val plan = viewModel.plan
+    val plan = subscriptionViewModel.plan
     val paths = viewModel.myPaths
 
     pauseToCreate?.let { active ->
@@ -133,7 +139,7 @@ fun MyPaths(viewModel: SkillSwapViewModel, context: Context, nav: NavHostControl
             .padding(top = 40.dp, bottom = 32.dp, start = 16.dp, end = 24.dp)
     ) {
         ScreenTopBar(title = "Mis rutas", onBack = { nav.popBackStack() })
-        OfflineBanner(viewModel)
+        OfflineBanner(viewModel.connectivity, viewModel.showingCache)
 
         Column(modifier = Modifier.padding(start = 8.dp)) {
             if (loading && plan == null) {
