@@ -1,4 +1,4 @@
-package com.innovify.skillswap.viewmodel
+package com.innovify.skillswap.iam.domain
 
 // Validación local del formulario de registro (el backend vuelve a validar).
 object SignUpValidator {

@@ -34,8 +34,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
-import com.innovify.skillswap.model.beans.VerificationCase
-import com.innovify.skillswap.model.beans.isHttpUrl
+import com.innovify.skillswap.assessment.domain.VerificationCase
+import com.innovify.skillswap.assessment.domain.isHttpUrl
 import com.innovify.skillswap.shared.presentation.theme.Error
 import com.innovify.skillswap.shared.presentation.theme.ErrorContainer
 import com.innovify.skillswap.shared.presentation.theme.NeutralSurface

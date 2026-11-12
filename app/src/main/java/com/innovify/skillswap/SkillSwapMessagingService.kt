@@ -14,8 +14,8 @@ import androidx.core.content.ContextCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
-import com.innovify.skillswap.model.beans.AuthUser
-import com.innovify.skillswap.model.beans.DeviceTokenRequest
+import com.innovify.skillswap.iam.domain.AuthUser
+import com.innovify.skillswap.iam.domain.DeviceTokenRequest
 import com.innovify.skillswap.shared.infrastructure.network.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

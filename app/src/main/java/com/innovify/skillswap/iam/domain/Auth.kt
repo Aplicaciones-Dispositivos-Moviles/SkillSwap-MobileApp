@@ -1,4 +1,4 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.iam.domain
 
 import com.google.gson.annotations.SerializedName
 

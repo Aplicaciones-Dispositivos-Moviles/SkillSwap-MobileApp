@@ -1,4 +1,6 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.credentialverification.domain
+
+import com.innovify.skillswap.learningpath.domain.PathNode
 
 // CertificateResource del backend (solo los campos que usa la app).
 // status: "Pending" | "Unverified" | "Suspicious" | "Verified" | "Rejected"
@@ -58,10 +60,3 @@ data class CertificateMismatch(
         }
     }
 }
-
-// Cuerpo de error del backend (ProblemDetail): title = código, detail = mensaje legible
-data class ApiError(
-    var title: String?,
-    var detail: String?,
-    var status: Int?
-)

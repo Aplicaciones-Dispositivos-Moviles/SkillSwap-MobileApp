@@ -1,4 +1,6 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.learningpath.domain
+
+import com.innovify.skillswap.learningpath.domain.nodeCount
 
 // Body de POST api/v1/learning-paths/skill-options: la meta en palabras del Estudiante (1 a 500 caracteres).
 data class SkillOptionsRequest(

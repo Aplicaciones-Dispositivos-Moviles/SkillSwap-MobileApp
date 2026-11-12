@@ -38,7 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
-import com.innovify.skillswap.model.beans.MiniProjectSubmission
+import com.innovify.skillswap.assessment.domain.MiniProjectSubmission
 import com.innovify.skillswap.shared.presentation.theme.AiContainer
 import com.innovify.skillswap.shared.presentation.theme.AiViolet
 import com.innovify.skillswap.shared.presentation.theme.NeutralSurface

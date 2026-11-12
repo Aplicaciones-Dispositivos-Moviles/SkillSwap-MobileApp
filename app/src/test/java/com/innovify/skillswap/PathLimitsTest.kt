@@ -1,15 +1,15 @@
 package com.innovify.skillswap
 
-import com.innovify.skillswap.model.beans.LearningPath
-import com.innovify.skillswap.model.beans.NEW_PATH_ALLOWED
-import com.innovify.skillswap.model.beans.NEW_PATH_NEEDS_PAUSE
-import com.innovify.skillswap.model.beans.NEW_PATH_TOTAL_LIMIT
-import com.innovify.skillswap.model.beans.PlanLimits
-import com.innovify.skillswap.model.beans.activePathCount
-import com.innovify.skillswap.model.beans.canResumePath
-import com.innovify.skillswap.model.beans.newPathDecision
-import com.innovify.skillswap.model.beans.pathStatusLabel
-import com.innovify.skillswap.model.beans.totalPathCount
+import com.innovify.skillswap.learningpath.domain.LearningPath
+import com.innovify.skillswap.learningpath.domain.NEW_PATH_ALLOWED
+import com.innovify.skillswap.learningpath.domain.NEW_PATH_NEEDS_PAUSE
+import com.innovify.skillswap.learningpath.domain.NEW_PATH_TOTAL_LIMIT
+import com.innovify.skillswap.subscription.domain.PlanLimits
+import com.innovify.skillswap.learningpath.domain.activePathCount
+import com.innovify.skillswap.learningpath.domain.canResumePath
+import com.innovify.skillswap.learningpath.domain.newPathDecision
+import com.innovify.skillswap.learningpath.domain.pathStatusLabel
+import com.innovify.skillswap.learningpath.domain.totalPathCount
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

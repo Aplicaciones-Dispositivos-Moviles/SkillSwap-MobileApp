@@ -1,4 +1,4 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.finaldemonstration.domain
 
 import java.time.Duration
 import java.time.Instant

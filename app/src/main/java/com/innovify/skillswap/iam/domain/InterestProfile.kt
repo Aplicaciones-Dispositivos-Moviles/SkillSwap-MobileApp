@@ -1,4 +1,4 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.iam.domain
 
 // US04 · Body de PUT api/v1/users/{id}/interests: de 1 a 10 temas (hasta 60 caracteres) y una descripción opcional
 data class UpdateInterestsRequest(

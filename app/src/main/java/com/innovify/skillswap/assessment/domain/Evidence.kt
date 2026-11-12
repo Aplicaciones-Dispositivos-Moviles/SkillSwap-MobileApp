@@ -1,4 +1,4 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.assessment.domain
 
 // US26 · Body de PUT api/v1/verification-cases/{id}/evidence: enlace a un repositorio o portafolio
 data class AttachEvidenceRequest(

@@ -7,14 +7,14 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.innovify.skillswap.model.beans.AssessmentBlueprint
-import com.innovify.skillswap.model.beans.LearningPath
-import com.innovify.skillswap.model.beans.LocalCertificate
-import com.innovify.skillswap.model.beans.MiniProject
-import com.innovify.skillswap.model.beans.MiniProjectSubmission
-import com.innovify.skillswap.model.beans.PathNode
-import com.innovify.skillswap.model.beans.Question
-import com.innovify.skillswap.model.beans.QuizProgress
+import com.innovify.skillswap.assessment.domain.AssessmentBlueprint
+import com.innovify.skillswap.learningpath.domain.LearningPath
+import com.innovify.skillswap.credentialverification.domain.LocalCertificate
+import com.innovify.skillswap.assessment.domain.MiniProject
+import com.innovify.skillswap.assessment.domain.MiniProjectSubmission
+import com.innovify.skillswap.learningpath.domain.PathNode
+import com.innovify.skillswap.assessment.domain.Question
+import com.innovify.skillswap.assessment.domain.QuizProgress
 
 // T48 + T49: base local SQLite.
 //  - learning_path / path_node: copia de la última ruta descargada (se lee cuando no hay conexión).

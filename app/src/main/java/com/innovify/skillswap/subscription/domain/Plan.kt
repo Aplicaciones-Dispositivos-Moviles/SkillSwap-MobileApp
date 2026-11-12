@@ -1,4 +1,4 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.subscription.domain
 
 // US05 · Plan del Estudiante (StudentPlanResource del backend): Free o Premium, sus límites y la suscripción vigente.
 data class ReviewDeadline(

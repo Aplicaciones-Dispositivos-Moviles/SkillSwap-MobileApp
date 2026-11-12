@@ -1,6 +1,6 @@
 package com.innovify.skillswap
 
-import com.innovify.skillswap.viewmodel.SignUpValidator
+import com.innovify.skillswap.iam.domain.SignUpValidator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

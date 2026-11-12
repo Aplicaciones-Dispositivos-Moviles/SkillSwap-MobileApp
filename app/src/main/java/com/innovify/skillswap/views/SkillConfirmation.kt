@@ -34,7 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
-import com.innovify.skillswap.model.beans.SkillOption
+import com.innovify.skillswap.learningpath.domain.SkillOption
 import com.innovify.skillswap.shared.presentation.theme.NeutralBorder
 import com.innovify.skillswap.shared.presentation.theme.NeutralSurface
 import com.innovify.skillswap.shared.presentation.theme.SkillBlue

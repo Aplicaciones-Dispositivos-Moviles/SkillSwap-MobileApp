@@ -1,4 +1,6 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.assessment.domain
+
+import com.innovify.skillswap.assessment.domain.VerificationCaseDetail
 
 // QuestionResource del backend: la respuesta correcta nunca viaja al teléfono.
 data class Question(

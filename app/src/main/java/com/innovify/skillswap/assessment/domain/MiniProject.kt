@@ -1,4 +1,4 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.assessment.domain
 
 // RubricCriterionResource: un criterio con el que se evalúa el proyecto.
 data class RubricCriterion(

@@ -41,10 +41,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
-import com.innovify.skillswap.model.beans.FinalDemonstration
-import com.innovify.skillswap.model.beans.demonstrationStatusLabel
-import com.innovify.skillswap.model.beans.isFarEnoughAhead
-import com.innovify.skillswap.model.beans.modalityLabel
+import com.innovify.skillswap.finaldemonstration.domain.FinalDemonstration
+import com.innovify.skillswap.finaldemonstration.domain.demonstrationStatusLabel
+import com.innovify.skillswap.finaldemonstration.domain.isFarEnoughAhead
+import com.innovify.skillswap.finaldemonstration.domain.modalityLabel
 import com.innovify.skillswap.shared.presentation.theme.Error
 import com.innovify.skillswap.shared.presentation.theme.ErrorContainer
 import com.innovify.skillswap.shared.presentation.theme.NeutralBorder

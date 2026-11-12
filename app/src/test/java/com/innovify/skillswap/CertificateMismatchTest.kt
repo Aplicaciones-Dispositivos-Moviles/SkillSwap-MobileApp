@@ -1,6 +1,6 @@
 package com.innovify.skillswap
 
-import com.innovify.skillswap.model.beans.CertificateMismatch
+import com.innovify.skillswap.credentialverification.domain.CertificateMismatch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue

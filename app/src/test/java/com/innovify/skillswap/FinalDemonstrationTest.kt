@@ -1,10 +1,10 @@
 package com.innovify.skillswap
 
 import com.google.gson.Gson
-import com.innovify.skillswap.model.beans.FinalDemonstration
-import com.innovify.skillswap.model.beans.demonstrationStatusLabel
-import com.innovify.skillswap.model.beans.isFarEnoughAhead
-import com.innovify.skillswap.model.beans.modalityLabel
+import com.innovify.skillswap.finaldemonstration.domain.FinalDemonstration
+import com.innovify.skillswap.finaldemonstration.domain.demonstrationStatusLabel
+import com.innovify.skillswap.finaldemonstration.domain.isFarEnoughAhead
+import com.innovify.skillswap.finaldemonstration.domain.modalityLabel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

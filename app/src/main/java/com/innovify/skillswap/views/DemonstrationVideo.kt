@@ -34,9 +34,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
-import com.innovify.skillswap.model.beans.MAX_VIDEO_BYTES
-import com.innovify.skillswap.model.beans.MAX_VIDEO_SECONDS
-import com.innovify.skillswap.model.beans.modalityLabel
+import com.innovify.skillswap.finaldemonstration.domain.MAX_VIDEO_BYTES
+import com.innovify.skillswap.finaldemonstration.domain.MAX_VIDEO_SECONDS
+import com.innovify.skillswap.finaldemonstration.domain.modalityLabel
 import com.innovify.skillswap.shared.presentation.theme.Error
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel

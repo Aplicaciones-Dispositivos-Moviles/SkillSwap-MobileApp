@@ -1,4 +1,8 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.assessment.domain
+
+import com.innovify.skillswap.assessment.domain.AssessmentAttempt
+import com.innovify.skillswap.assessment.domain.FailedQuestion
+import com.innovify.skillswap.assessment.domain.MiniProject
 
 // VerificationCaseResource: un caso de verificación. caseType = "Quiz" | "MiniProject".
 // attemptId solo viene en casos de quiz; submissionId solo en casos de miniproyecto.

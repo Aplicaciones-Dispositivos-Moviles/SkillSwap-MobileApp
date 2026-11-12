@@ -1,4 +1,4 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.learningpath.domain
 
 // LearningPathResource del backend. status: "Active" | "Paused" | "Completed"
 data class LearningPath(

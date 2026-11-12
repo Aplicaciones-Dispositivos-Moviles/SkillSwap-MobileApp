@@ -1,4 +1,4 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.credentialverification.domain
 
 // Certificado guardado en el teléfono (T48). status: "Pending" (aún no enviado) | "Sent" (ya subido al backend)
 data class LocalCertificate(

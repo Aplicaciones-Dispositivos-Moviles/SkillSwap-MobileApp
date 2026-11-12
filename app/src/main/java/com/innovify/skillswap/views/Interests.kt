@@ -29,10 +29,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
-import com.innovify.skillswap.model.beans.MAX_INTERESTS
-import com.innovify.skillswap.model.beans.MAX_INTEREST_LENGTH
-import com.innovify.skillswap.model.beans.cleanInterest
-import com.innovify.skillswap.model.beans.interestError
+import com.innovify.skillswap.iam.domain.MAX_INTERESTS
+import com.innovify.skillswap.iam.domain.MAX_INTEREST_LENGTH
+import com.innovify.skillswap.iam.domain.cleanInterest
+import com.innovify.skillswap.iam.domain.interestError
 import com.innovify.skillswap.shared.presentation.theme.Error
 import com.innovify.skillswap.shared.presentation.theme.NeutralBorder
 import com.innovify.skillswap.shared.presentation.theme.TextSecondary

@@ -1,4 +1,4 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.reputation.domain
 
 // WalletResource: respuesta de GET api/v1/wallets/{userId} (saldo de SkillCredits)
 data class Wallet(

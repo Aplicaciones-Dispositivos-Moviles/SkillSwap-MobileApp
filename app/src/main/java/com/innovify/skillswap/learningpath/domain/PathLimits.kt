@@ -1,4 +1,7 @@
-package com.innovify.skillswap.model.beans
+package com.innovify.skillswap.learningpath.domain
+
+import com.innovify.skillswap.subscription.domain.PlanLimits
+import com.innovify.skillswap.learningpath.domain.LearningPath
 
 // Reglas de rutas del plan (informe: plan gratuito = 1 ruta activa a la vez y hasta 3 en total; plan mensual =
 // hasta 3 activas y sin tope). Una ruta avanzada canjeada con SkillCredits no cuenta en ninguno de los dos límites.
