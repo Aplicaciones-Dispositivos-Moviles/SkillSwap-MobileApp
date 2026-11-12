@@ -1,6 +1,6 @@
 package com.innovify.skillswap
 
-import com.innovify.skillswap.viewmodel.CertificateParser
+import com.innovify.skillswap.credentialverification.domain.CertificateParser
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

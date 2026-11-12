@@ -1,4 +1,4 @@
-package com.innovify.skillswap.viewmodel
+package com.innovify.skillswap.iam.infrastructure
 
 import android.content.Context
 import android.os.Build

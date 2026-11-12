@@ -56,6 +56,20 @@ import retrofit2.Response
 import java.io.File
 import java.time.Instant
 import com.innovify.skillswap.shared.infrastructure.connectivity.ConnectivityObserver
+import com.innovify.skillswap.assessment.infrastructure.assessmentApi
+import com.innovify.skillswap.credentialverification.infrastructure.certificateApi
+import com.innovify.skillswap.finaldemonstration.infrastructure.finalDemonstrationApi
+import com.innovify.skillswap.iam.infrastructure.iamApi
+import com.innovify.skillswap.learningpath.infrastructure.learningPathApi
+import com.innovify.skillswap.reputation.infrastructure.walletApi
+import com.innovify.skillswap.subscription.infrastructure.subscriptionApi
+import com.innovify.skillswap.credentialverification.infrastructure.CertificateOcr
+import com.innovify.skillswap.credentialverification.infrastructure.UploadFile
+import com.innovify.skillswap.iam.infrastructure.BiometricVault
+import com.innovify.skillswap.assessment.infrastructure.MiniProjectDao
+import com.innovify.skillswap.assessment.infrastructure.QuizDao
+import com.innovify.skillswap.credentialverification.infrastructure.LocalCertificateDao
+import com.innovify.skillswap.learningpath.infrastructure.LearningPathDao
 
 class SkillSwapViewModel : ViewModel() {
 
@@ -137,7 +151,7 @@ class SkillSwapViewModel : ViewModel() {
     // Devuelve el texto que se le muestra al Estudiante (éxito o motivo del rechazo).
     suspend fun enableAsVerifier(skillTag: String): String {
         return try {
-            val response = RetrofitClient.webService.createVerifierProfile(
+            val response = assessmentApi.createVerifierProfile(
                 CreateVerifierProfileRequest(skillTag)
             )
             when {
@@ -154,7 +168,7 @@ class SkillSwapViewModel : ViewModel() {
     // Registro de un Estudiante nuevo. No inicia sesión: primero debe verificar su correo.
     suspend fun signUp(username: String, email: String, password: String): Boolean {
         return try {
-            val response = RetrofitClient.webService.signUp(SignUpRequest(username, email, password))
+            val response = iamApi.signUp(SignUpRequest(username, email, password))
             if (response.isSuccessful) {
                 registeredUsername = username
                 true
@@ -175,7 +189,7 @@ class SkillSwapViewModel : ViewModel() {
     suspend fun signIn(username: String, password: String, context: Context): Boolean {
         credentialsRejected = false
         return try {
-            val response = RetrofitClient.webService.signIn(SignInRequest(username, password))
+            val response = iamApi.signIn(SignInRequest(username, password))
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 user = body
@@ -212,7 +226,7 @@ class SkillSwapViewModel : ViewModel() {
             return loadPathFromCache(context, studentId, "Sin conexión y no hay una ruta guardada en el teléfono")
         }
         return try {
-            val response = RetrofitClient.webService.getLearningPaths(studentId)
+            val response = learningPathApi.getLearningPaths(studentId)
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 myPaths = body
@@ -224,7 +238,7 @@ class SkillSwapViewModel : ViewModel() {
                 showingCache = false
                 // Guardar en SQLite es opcional: si falla, la ruta igual se muestra
                 try {
-                    if (latest != null) db(context).savePath(latest) else db(context).clearPath(studentId)
+                    if (latest != null) LearningPathDao(db(context)).savePath(latest) else LearningPathDao(db(context)).clearPath(studentId)
                 } catch (e: Exception) {
                 }
                 true
@@ -247,7 +261,7 @@ class SkillSwapViewModel : ViewModel() {
     // Lee la última ruta guardada. Si no hay ninguna, errorMessage explica por qué no se puede mostrar nada.
     private fun loadPathFromCache(context: Context, studentId: Int, error: String): Boolean {
         val cached = try {
-            db(context).getPath(studentId)
+            LearningPathDao(db(context)).getPath(studentId)
         } catch (e: Exception) {
             null
         }
@@ -272,7 +286,7 @@ class SkillSwapViewModel : ViewModel() {
         goal = goalText
         skillOptions = emptyList()
         return try {
-            val response = RetrofitClient.webService.getSkillOptions(SkillOptionsRequest(goalText))
+            val response = learningPathApi.getSkillOptions(SkillOptionsRequest(goalText))
             val body = response.body()
             if (response.isSuccessful && body != null && body.isNotEmpty()) {
                 skillOptions = body.sortedByDescending { it.affinity }
@@ -300,7 +314,7 @@ class SkillSwapViewModel : ViewModel() {
     suspend fun declareGoal(context: Context, skillTag: String?): Boolean {
         planLimitMessage = null
         return try {
-            val response = RetrofitClient.webService.declareGoal(DeclareGoalRequest(goal, skillTag))
+            val response = learningPathApi.declareGoal(DeclareGoalRequest(goal, skillTag))
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 path = body
@@ -308,7 +322,7 @@ class SkillSwapViewModel : ViewModel() {
                 selectedNode = null
                 showingCache = false
                 try {
-                    db(context).savePath(body)
+                    LearningPathDao(db(context)).savePath(body)
                 } catch (e: Exception) {
                 }
                 true
@@ -345,7 +359,7 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return try {
-            val response = RetrofitClient.webService.getMyDemonstrations()
+            val response = finalDemonstrationApi.getMyDemonstrations()
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 val wanted = selectedDemonstrationId
@@ -370,7 +384,7 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return demonstrationCall {
-            RetrofitClient.webService.scheduleDemonstration(
+            finalDemonstrationApi.scheduleDemonstration(
                 ScheduleDemonstrationRequest(pathId, modality, scheduledAt.toString())
             )
         }
@@ -379,13 +393,13 @@ class SkillSwapViewModel : ViewModel() {
     suspend fun rescheduleDemonstration(scheduledAt: Instant): Boolean {
         val id = demonstration?.id ?: return false
         return demonstrationCall {
-            RetrofitClient.webService.rescheduleDemonstration(id, RescheduleDemonstrationRequest(scheduledAt.toString()))
+            finalDemonstrationApi.rescheduleDemonstration(id, RescheduleDemonstrationRequest(scheduledAt.toString()))
         }
     }
 
     suspend fun cancelDemonstration(): Boolean {
         val id = demonstration?.id ?: return false
-        val ok = demonstrationCall { RetrofitClient.webService.cancelDemonstration(id) }
+        val ok = demonstrationCall { finalDemonstrationApi.cancelDemonstration(id) }
         if (ok) demonstration = null // cancelada: la ruta queda libre para programar otra
         return ok
     }
@@ -412,7 +426,7 @@ class SkillSwapViewModel : ViewModel() {
         return try {
             val body = RequestBody.create(MediaType.parse("video/mp4"), file)
             val part = MultipartBody.Part.createFormData("file", file.name, body)
-            val response = RetrofitClient.webService.uploadDemonstrationVideo(id, part)
+            val response = finalDemonstrationApi.uploadDemonstrationVideo(id, part)
             val result = response.body()
             if (response.isSuccessful && result != null) {
                 demonstration = result
@@ -472,7 +486,7 @@ class SkillSwapViewModel : ViewModel() {
     suspend fun checkPassword(password: String): Boolean {
         val username = user?.username ?: return false
         return try {
-            val response = RetrofitClient.webService.signIn(SignInRequest(username, password))
+            val response = iamApi.signIn(SignInRequest(username, password))
             if (!response.isSuccessful) {
                 errorMessage = if (response.code() == 401) "La contraseña no es correcta"
                 else "No se pudo verificar la contraseña (${response.code()})"
@@ -507,7 +521,7 @@ class SkillSwapViewModel : ViewModel() {
         FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    RetrofitClient.webService.registerDeviceToken(DeviceTokenRequest(token))
+                    iamApi.registerDeviceToken(DeviceTokenRequest(token))
                 } catch (e: Exception) {
                     // sin red: se reintenta cuando vuelva internet
                 }
@@ -519,7 +533,7 @@ class SkillSwapViewModel : ViewModel() {
         val jwt = RetrofitClient.token ?: return
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                RetrofitClient.webService.removeDeviceToken("Bearer $jwt")
+                iamApi.removeDeviceToken("Bearer $jwt")
             } catch (e: Exception) {
                 // si falla, el backend olvida el token solo cuando FCM lo reporta inválido
             }
@@ -560,7 +574,7 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         try {
-            val response = RetrofitClient.webService.getLearningPaths(studentId)
+            val response = learningPathApi.getLearningPaths(studentId)
             val body = response.body()
             if (!response.isSuccessful || body == null) {
                 errorMessage = messageFrom(response, "No se pudieron cargar tus rutas (${response.code()})")
@@ -583,11 +597,11 @@ class SkillSwapViewModel : ViewModel() {
     }
 
     suspend fun pausePath(pathId: Int): Boolean {
-        return changePath("No se pudo pausar la ruta") { RetrofitClient.webService.pausePath(pathId) }
+        return changePath("No se pudo pausar la ruta") { learningPathApi.pausePath(pathId) }
     }
 
     suspend fun resumePath(pathId: Int): Boolean {
-        return changePath("No se pudo reanudar la ruta") { RetrofitClient.webService.resumePath(pathId) }
+        return changePath("No se pudo reanudar la ruta") { learningPathApi.resumePath(pathId) }
     }
 
     // Pausa o reanuda y deja al día la lista y la ruta que se está mostrando
@@ -636,7 +650,7 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return try {
-            val response = RetrofitClient.webService.getPlan(userId)
+            val response = subscriptionApi.getPlan(userId)
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 plan = body
@@ -661,7 +675,7 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return try {
-            val response = RetrofitClient.webService.subscribe()
+            val response = subscriptionApi.subscribe()
             if (response.isSuccessful) {
                 loadPlan()
                 true
@@ -692,7 +706,7 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return try {
-            val response = RetrofitClient.webService.cancelSubscription(subscription.id)
+            val response = subscriptionApi.cancelSubscription(subscription.id)
             if (response.isSuccessful) {
                 loadPlan()
                 true
@@ -722,7 +736,7 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return try {
-            val response = RetrofitClient.webService.getCurrentUser()
+            val response = iamApi.getCurrentUser()
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 interests = body.interests ?: emptyList()
@@ -749,7 +763,7 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return try {
-            val response = RetrofitClient.webService.updateInterests(
+            val response = iamApi.updateInterests(
                 userId, UpdateInterestsRequest(topics, description.trim().ifEmpty { null })
             )
             if (response.isSuccessful) {
@@ -785,13 +799,13 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return try {
-            val walletResponse = RetrofitClient.webService.getWallet(userId)
+            val walletResponse = walletApi.getWallet(userId)
             val walletBody = walletResponse.body()
             if (!walletResponse.isSuccessful || walletBody == null) {
                 errorMessage = walletError(walletResponse)
                 return false
             }
-            val transactionsResponse = RetrofitClient.webService.getWalletTransactions(userId)
+            val transactionsResponse = walletApi.getWalletTransactions(userId)
             val transactionsBody = transactionsResponse.body()
             if (!transactionsResponse.isSuccessful || transactionsBody == null) {
                 errorMessage = walletError(transactionsResponse)
@@ -826,7 +840,7 @@ class SkillSwapViewModel : ViewModel() {
 
     fun loadLocalCertificate(context: Context, nodeId: Int) {
         localCertificate = try {
-            db(context).findCertificate(nodeId)
+            LocalCertificateDao(db(context)).findCertificate(nodeId)
         } catch (e: Exception) {
             null
         }
@@ -859,20 +873,20 @@ class SkillSwapViewModel : ViewModel() {
 
             val db = db(context)
             // Un solo certificado pendiente por nodo: el nuevo reemplaza al anterior
-            db.findCertificate(nodeId)?.let { old ->
+            LocalCertificateDao(db).findCertificate(nodeId)?.let { old ->
                 if (old.status == "Pending") {
                     File(old.filePath).delete()
-                    db.deleteCertificate(old.id)
+                    LocalCertificateDao(db).deleteCertificate(old.id)
                 }
             }
-            val id = db.saveCertificate(
+            val id = LocalCertificateDao(db).saveCertificate(
                 LocalCertificate(
                     id = 0, nodeId = nodeId, filePath = file.absolutePath, mime = mime,
                     institution = institution, course = course, issueDate = issueDate,
                     ocrText = ocrText, status = "Pending", createdAt = System.currentTimeMillis()
                 )
             )
-            localCertificate = db.findCertificate(nodeId)
+            localCertificate = LocalCertificateDao(db).findCertificate(nodeId)
             id
         } catch (e: IllegalStateException) {
             errorMessage = e.message ?: "No se pudo guardar el certificado en el teléfono"
@@ -914,13 +928,13 @@ class SkillSwapViewModel : ViewModel() {
     suspend fun openQuiz(context: Context, nodeId: Int): Boolean {
         val db = db(context)
         val local = try {
-            db.findBlueprint(nodeId)
+            QuizDao(db).findBlueprint(nodeId)
         } catch (e: Exception) {
             null
         }
         val progress = local?.let {
             try {
-                db.findProgress(it.id)
+                QuizDao(db).findProgress(it.id)
             } catch (e: Exception) {
                 null
             }
@@ -938,11 +952,11 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return try {
-            val response = RetrofitClient.webService.generateBlueprint(nodeId)
+            val response = assessmentApi.generateBlueprint(nodeId)
             val body = response.body()
             if (response.isSuccessful && body != null) {
-                db.saveBlueprint(body, nodeId)
-                showQuiz(body, db.findProgress(body.id))
+                QuizDao(db).saveBlueprint(body, nodeId)
+                showQuiz(body, QuizDao(db).findProgress(body.id))
                 true
             } else {
                 errorMessage = when (response.code()) {
@@ -963,7 +977,7 @@ class SkillSwapViewModel : ViewModel() {
         if (quizStatus != "Draft" || position !in answers.indices) return
         answers = answers.toMutableList().also { it[position] = option }
         try {
-            db(context).saveProgress(quiz.id, quiz.pathNodeId, answers, "Draft")
+            QuizDao(db(context)).saveProgress(quiz.id, quiz.pathNodeId, answers, "Draft")
         } catch (e: Exception) {
             // la respuesta sigue en pantalla; se guardará con la siguiente
         }
@@ -974,7 +988,7 @@ class SkillSwapViewModel : ViewModel() {
         val quiz = blueprint ?: return
         if (quizStatus != "Draft" || answers.any { it < 0 }) return
         try {
-            db(context).saveProgress(quiz.id, quiz.pathNodeId, answers, "Pending")
+            QuizDao(db(context)).saveProgress(quiz.id, quiz.pathNodeId, answers, "Pending")
         } catch (e: Exception) {
             quizMessage = "No se pudieron guardar tus respuestas en el teléfono"
             return
@@ -993,13 +1007,13 @@ class SkillSwapViewModel : ViewModel() {
     private suspend fun sendAttempt(context: Context, progress: QuizProgress): AssessmentAttempt? {
         lastSendCode = 0
         return try {
-            val response = RetrofitClient.webService.submitAttempt(
+            val response = assessmentApi.submitAttempt(
                 SubmitAttemptRequest(progress.blueprintId, progress.answers)
             )
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 try {
-                    db(context).markAttemptSent(progress.blueprintId, Gson().toJson(body))
+                    QuizDao(db(context)).markAttemptSent(progress.blueprintId, Gson().toJson(body))
                 } catch (e: Exception) {
                 }
                 if (blueprint?.id == progress.blueprintId) {
@@ -1022,7 +1036,7 @@ class SkillSwapViewModel : ViewModel() {
     // T51: reenvía los quiz que quedaron "Pending". Devuelve cuántos se calificaron.
     suspend fun resendPending(context: Context): Int {
         val pending = try {
-            db(context).pendingAttempts()
+            QuizDao(db(context)).pendingAttempts()
         } catch (e: Exception) {
             emptyList()
         }
@@ -1058,7 +1072,7 @@ class SkillSwapViewModel : ViewModel() {
     // Descarta el quiz guardado del nodo y pide uno nuevo al backend. true si el nuevo quedó abierto.
     suspend fun discardPendingQuiz(context: Context, nodeId: Int): Boolean {
         try {
-            db(context).deleteQuiz(nodeId)
+            QuizDao(db(context)).deleteQuiz(nodeId)
         } catch (e: Exception) {
             errorMessage = "No se pudo descartar el intento guardado"
             return false
@@ -1076,8 +1090,8 @@ class SkillSwapViewModel : ViewModel() {
     fun hasQuizResult(context: Context, nodeId: Int): Boolean {
         return try {
             val db = db(context)
-            val local = db.findBlueprint(nodeId)
-            val progress = local?.let { db.findProgress(it.id) }
+            val local = QuizDao(db).findBlueprint(nodeId)
+            val progress = local?.let { QuizDao(db).findProgress(it.id) }
             progress != null && progress.status == "Sent" && progress.resultJson != null
         } catch (e: Exception) {
             false
@@ -1088,13 +1102,13 @@ class SkillSwapViewModel : ViewModel() {
     fun openLastResult(context: Context, nodeId: Int): Boolean {
         val db = db(context)
         val local = try {
-            db.findBlueprint(nodeId)
+            QuizDao(db).findBlueprint(nodeId)
         } catch (e: Exception) {
             null
         }
         val progress = local?.let {
             try {
-                db.findProgress(it.id)
+                QuizDao(db).findProgress(it.id)
             } catch (e: Exception) {
                 null
             }
@@ -1123,12 +1137,12 @@ class SkillSwapViewModel : ViewModel() {
         val db = db(context)
         if (!connectivity.isOnline) {
             val cached = try {
-                db.findMiniProject(nodeId)
+                MiniProjectDao(db).findMiniProject(nodeId)
             } catch (e: Exception) {
                 null
             }
             return if (cached != null) {
-                showProject(cached, try { db.findSubmission(nodeId) } catch (e: Exception) { null })
+                showProject(cached, try { MiniProjectDao(db).findSubmission(nodeId) } catch (e: Exception) { null })
                 true
             } else {
                 errorMessage = "Necesitas internet para ver el proyecto la primera vez"
@@ -1136,19 +1150,19 @@ class SkillSwapViewModel : ViewModel() {
             }
         }
         return try {
-            val latest = if (forceNew) null else RetrofitClient.webService.getMiniProject(nodeId)
+            val latest = if (forceNew) null else assessmentApi.getMiniProject(nodeId)
             val response = if (latest == null || latest.code() == 404) {
-                RetrofitClient.webService.generateMiniProject(nodeId, false)
+                assessmentApi.generateMiniProject(nodeId, false)
             } else {
                 latest
             }
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 try {
-                    db.saveMiniProject(body)
+                    MiniProjectDao(db).saveMiniProject(body)
                 } catch (e: Exception) {
                 }
-                showProject(body, try { db.findSubmission(nodeId) } catch (e: Exception) { null })
+                showProject(body, try { MiniProjectDao(db).findSubmission(nodeId) } catch (e: Exception) { null })
                 true
             } else {
                 errorMessage = when (response.code()) {
@@ -1171,13 +1185,13 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return try {
-            val response = RetrofitClient.webService.submitMiniProject(
+            val response = assessmentApi.submitMiniProject(
                 current.id, SubmitMiniProjectRequest(repositoryUrl)
             )
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 try {
-                    db(context).saveSubmission(current.pathNodeId, body)
+                    MiniProjectDao(db(context)).saveSubmission(current.pathNodeId, body)
                 } catch (e: Exception) {
                 }
                 projectSubmission = body
@@ -1208,11 +1222,11 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return try {
-            val response = RetrofitClient.webService.getMiniProjectSubmission(current.miniProjectId, current.id)
+            val response = assessmentApi.getMiniProjectSubmission(current.miniProjectId, current.id)
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 try {
-                    db(context).saveSubmission(current.pathNodeId, body)
+                    MiniProjectDao(db(context)).saveSubmission(current.pathNodeId, body)
                 } catch (e: Exception) {
                 }
                 projectSubmission = body
@@ -1257,7 +1271,7 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return try {
-            val response = RetrofitClient.webService.getVerificationCase(caseId)
+            val response = assessmentApi.getVerificationCase(caseId)
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 caseDetail = body
@@ -1283,7 +1297,7 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return try {
-            val response = RetrofitClient.webService.attachEvidence(caseId, AttachEvidenceRequest(url.trim()))
+            val response = assessmentApi.attachEvidence(caseId, AttachEvidenceRequest(url.trim()))
             val body = response.body()
             if (response.isSuccessful) {
                 if (body != null) caseDetail = caseDetail?.copy(verificationCase = body)
@@ -1311,7 +1325,7 @@ class SkillSwapViewModel : ViewModel() {
             return false
         }
         return try {
-            val response = RetrofitClient.webService.appealVerificationCase(caseId)
+            val response = assessmentApi.appealVerificationCase(caseId)
             val body = response.body()
             if (response.isSuccessful) {
                 if (body != null) caseDetail = caseDetail?.copy(verificationCase = body)
@@ -1365,7 +1379,7 @@ class SkillSwapViewModel : ViewModel() {
     ): Boolean {
         return try {
             val file = CertificateOcr.prepareUpload(context, uri)
-            val response = RetrofitClient.webService.uploadCertificate(
+            val response = certificateApi.uploadCertificate(
                 filePart(file),
                 textPart("institutionName", institution),
                 textPart("courseName", course),
@@ -1377,7 +1391,7 @@ class SkillSwapViewModel : ViewModel() {
                 certificate = body
                 certificateLink = null
                 try {
-                    db(context).markCertificateSent(localId)
+                    LocalCertificateDao(db(context)).markCertificateSent(localId)
                     localCertificate = localCertificate?.let { it.copy(status = "Sent") }
                 } catch (e: Exception) {
                 }
@@ -1407,7 +1421,7 @@ class SkillSwapViewModel : ViewModel() {
         val certificateId = certificate?.id ?: return false
         certificateMismatch = null
         return try {
-            val response = RetrofitClient.webService.linkCertificate(
+            val response = certificateApi.linkCertificate(
                 nodeId, LinkCertificateRequest(certificateId)
             )
             val body = response.body()

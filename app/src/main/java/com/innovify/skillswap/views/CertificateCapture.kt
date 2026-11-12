@@ -45,8 +45,8 @@ import androidx.navigation.NavHostController
 import com.innovify.skillswap.credentialverification.domain.CertificateMismatch
 import com.innovify.skillswap.shared.presentation.theme.SkillBlue
 import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
-import com.innovify.skillswap.viewmodel.CertificateOcr
-import com.innovify.skillswap.viewmodel.CertificateParser
+import com.innovify.skillswap.credentialverification.infrastructure.CertificateOcr
+import com.innovify.skillswap.credentialverification.domain.CertificateParser
 import com.innovify.skillswap.viewmodel.SkillSwapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

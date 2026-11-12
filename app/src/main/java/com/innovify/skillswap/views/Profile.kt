@@ -8,7 +8,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.fragment.app.FragmentActivity
-import com.innovify.skillswap.viewmodel.BiometricVault
+import com.innovify.skillswap.iam.infrastructure.BiometricVault
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

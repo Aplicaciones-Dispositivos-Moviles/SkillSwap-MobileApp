@@ -1,6 +1,5 @@
 package com.innovify.skillswap.shared.infrastructure.network
 
-import com.innovify.skillswap.model.response.WebService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -26,13 +25,15 @@ object RetrofitClient {
             .build()
     }
 
-    val webService: WebService by lazy {
+    private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl("https://skillswap-innovify.duckdns.org/")
             .client(okHttp)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(WebService::class.java)
     }
+
+    // Each bounded context creates its own Retrofit interface (see <context>/infrastructure/*Api.kt).
+    fun <T> create(service: Class<T>): T = retrofit.create(service)
 
 }
