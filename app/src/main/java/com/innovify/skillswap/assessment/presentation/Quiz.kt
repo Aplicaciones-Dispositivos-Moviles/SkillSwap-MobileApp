@@ -246,7 +246,10 @@ fun Quiz(
             return@FlowScaffold
         }
         if (!ready || quiz == null) {
-            Text(text = "No se pudo abrir el quiz de este nodo.", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = quizUnavailableMessage(viewModel.connectivity.isOnline),
+                style = MaterialTheme.typography.bodyLarge
+            )
             return@FlowScaffold
         }
 
@@ -402,3 +405,8 @@ private fun OptionCard(letter: String, text: String, selected: Boolean, enabled:
         }
     }
 }
+
+// Why the quiz could not be opened: without internet a new quiz cannot be generated, so say that plainly.
+fun quizUnavailableMessage(isOnline: Boolean): String =
+    if (isOnline) "No se pudo abrir el quiz de este nodo."
+    else "Necesitas conexión a internet para abrir este quiz. Conéctate y vuelve a intentarlo."
