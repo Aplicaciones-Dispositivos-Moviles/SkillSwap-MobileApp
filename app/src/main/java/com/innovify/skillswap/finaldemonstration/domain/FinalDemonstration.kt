@@ -69,3 +69,6 @@ fun demonstrationStatusLabel(status: String): String = when (status) {
 // true si el momento elegido está al menos 24 horas (más un minuto de margen) por delante de ahora
 fun isFarEnoughAhead(scheduledAt: Instant, now: Instant = Instant.now()): Boolean =
     !scheduledAt.isBefore(now.plus(Duration.ofHours(MIN_HOURS_AHEAD)).plusSeconds(60))
+
+// Who reviews the demonstration: the Verificador's public username, never the internal id.
+fun verifierLabel(username: String?): String = username?.takeIf { it.isNotBlank() }?.let { "@$it" } ?: "Asignado"

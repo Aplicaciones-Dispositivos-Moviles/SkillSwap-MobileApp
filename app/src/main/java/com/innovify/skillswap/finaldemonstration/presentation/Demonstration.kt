@@ -45,6 +45,7 @@ import com.innovify.skillswap.finaldemonstration.domain.FinalDemonstration
 import com.innovify.skillswap.finaldemonstration.domain.demonstrationStatusLabel
 import com.innovify.skillswap.finaldemonstration.domain.isFarEnoughAhead
 import com.innovify.skillswap.finaldemonstration.domain.modalityLabel
+import com.innovify.skillswap.finaldemonstration.domain.verifierLabel
 import com.innovify.skillswap.shared.presentation.theme.Error
 import com.innovify.skillswap.shared.presentation.theme.ErrorContainer
 import com.innovify.skillswap.shared.presentation.theme.NeutralBorder
@@ -125,6 +126,12 @@ fun Demonstration(viewModel: FinalDemonstrationViewModel, context: Context, nav:
 
     val demo = viewModel.demonstration
     val showForm = demo == null || (scheduleAnother && demo.status == "Rejected")
+
+    // The Verificador is shown by public username; it is read again only when the assigned one changes
+    LaunchedEffect(demo?.verifierUserId) {
+        viewModel.verifierUsername = null
+        demo?.verifierUserId?.let { id -> withContext(Dispatchers.IO) { viewModel.loadVerifierUsername(id) } }
+    }
 
     if (pickFor != null) {
         DateTimeDialogs(
@@ -297,7 +304,7 @@ fun Demonstration(viewModel: FinalDemonstrationViewModel, context: Context, nav:
                     Column(modifier = Modifier.padding(16.dp)) {
                         DetailRow("Fecha y hora", localDate(demo.scheduledAt))
                         DetailRow("Habilidad", demo.skillTag.replace('-', ' '))
-                        DetailRow("Verificador", "Verificador #${demo.verifierUserId}")
+                        DetailRow("Verificador", verifierLabel(viewModel.verifierUsername))
                         if (demo.hasVideo) DetailRow("Video enviado", localDate(demo.videoSubmittedAt))
                         if (demo.isReviewed()) {
                             DetailRow("Puntaje", "${demo.score ?: "—"} / 100")

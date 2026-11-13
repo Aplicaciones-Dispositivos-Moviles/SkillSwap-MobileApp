@@ -6,6 +6,7 @@ import com.innovify.skillswap.assessment.domain.AttachEvidenceRequest
 import com.innovify.skillswap.assessment.domain.CreateVerifierProfileRequest
 import com.innovify.skillswap.assessment.domain.MiniProject
 import com.innovify.skillswap.assessment.domain.MiniProjectSubmission
+import com.innovify.skillswap.assessment.domain.StudentReevaluation
 import com.innovify.skillswap.assessment.domain.SubmitAttemptRequest
 import com.innovify.skillswap.assessment.domain.SubmitMiniProjectRequest
 import com.innovify.skillswap.assessment.domain.VerificationCase
@@ -80,6 +81,11 @@ interface AssessmentApi {
     // 200 VerificationCase | 400 no es http/https | 403 | 404 | 409 ya resuelto
     @PUT("api/v1/verification-cases/{id}/evidence")
     suspend fun attachEvidence(@Path("id") id: Int, @Body body: AttachEvidenceRequest): Response<VerificationCase>
+
+    // Reevaluaciones que un Verificador senior ordenó sobre resultados del Estudiante, la más nueva primero.
+    // 200 List<StudentReevaluation> (puede no existir aún en producción: cualquier error se ignora)
+    @GET("api/v1/reevaluations/me")
+    suspend fun getMyReevaluations(): Response<List<StudentReevaluation>>
 
 }
 

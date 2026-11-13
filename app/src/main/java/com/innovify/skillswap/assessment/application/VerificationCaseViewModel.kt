@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.innovify.skillswap.assessment.domain.AttachEvidenceRequest
 import com.innovify.skillswap.assessment.domain.CreateVerifierProfileRequest
+import com.innovify.skillswap.assessment.domain.StudentReevaluation
 import com.innovify.skillswap.assessment.domain.VerificationCaseDetail
 import com.innovify.skillswap.assessment.infrastructure.assessmentApi
 import com.innovify.skillswap.shared.application.SessionAwareViewModel
@@ -95,6 +96,26 @@ class VerificationCaseViewModel(session: SessionStore) : SessionAwareViewModel(s
         } catch (e: Exception) {
             errorMessage = "No se pudo conectar con el servidor"
             false
+        }
+    }
+
+    // ------------------------------------------------- REEVALUACIONES
+    // Reevaluaciones que un Verificador senior ordenó sobre resultados del Estudiante (explican por qué un nodo
+    // volvió a "Disponible"). Vacía sin internet o si el backend falla: el aviso simplemente no se muestra.
+    var reevaluations: List<StudentReevaluation> by mutableStateOf(emptyList())
+
+    // Silencioso a propósito: no toca errorMessage ni muestra toasts (el endpoint puede no existir aún).
+    suspend fun loadReevaluations() {
+        if (!connectivity.isOnline) {
+            reevaluations = emptyList()
+            return
+        }
+        reevaluations = try {
+            val response = assessmentApi.getMyReevaluations()
+            val body = response.body()
+            if (response.isSuccessful && body != null) body.filterNotNull() else emptyList()
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 

@@ -5,6 +5,7 @@ import com.innovify.skillswap.finaldemonstration.domain.FinalDemonstration
 import com.innovify.skillswap.finaldemonstration.domain.demonstrationStatusLabel
 import com.innovify.skillswap.finaldemonstration.domain.isFarEnoughAhead
 import com.innovify.skillswap.finaldemonstration.domain.modalityLabel
+import com.innovify.skillswap.finaldemonstration.domain.verifierLabel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -78,5 +79,12 @@ class FinalDemonstrationTest {
         )
         assertNull(scheduled.score)
         assertNull(scheduled.feedback)
+    }
+
+    @Test
+    fun verifier_is_shown_by_username_never_by_internal_id() {
+        assertEquals("@verificador.bajo", verifierLabel("verificador.bajo"))
+        assertEquals("Asignado", verifierLabel(null))
+        assertEquals("Asignado", verifierLabel(" "))
     }
 }

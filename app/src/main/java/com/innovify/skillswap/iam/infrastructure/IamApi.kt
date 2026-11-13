@@ -2,6 +2,7 @@ package com.innovify.skillswap.iam.infrastructure
 
 import com.innovify.skillswap.iam.domain.AuthUser
 import com.innovify.skillswap.iam.domain.DeviceTokenRequest
+import com.innovify.skillswap.iam.domain.PublicUser
 import com.innovify.skillswap.iam.domain.SignInRequest
 import com.innovify.skillswap.iam.domain.SignUpRequest
 import com.innovify.skillswap.iam.domain.UpdateInterestsRequest
@@ -30,6 +31,10 @@ interface IamApi {
     // US04: usuario autenticado (trae sus intereses)
     @GET("api/v1/users/me")
     suspend fun getCurrentUser(): Response<UserResource>
+
+    // Public profile of another user (for example the Verificador of a final demonstration)
+    @GET("api/v1/users/{id}")
+    suspend fun getPublicUser(@Path("id") id: Int): Response<PublicUser>
 
     // US04: reemplaza los intereses. 200 UserResource | 400 | 403
     @PUT("api/v1/users/{id}/interests")
