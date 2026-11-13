@@ -540,7 +540,7 @@ private fun TransactionRow(transaction: CreditTransaction) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = transaction.description?.ifBlank { null } ?: transaction.typeLabel(),
+                    text = transaction.title(),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(

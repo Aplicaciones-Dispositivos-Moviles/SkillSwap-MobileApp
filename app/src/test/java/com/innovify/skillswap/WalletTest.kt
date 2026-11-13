@@ -33,6 +33,28 @@ class WalletTest {
     }
 
     @Test
+    fun title_is_built_in_spanish_from_the_movement_data_not_from_the_backend_text() {
+        val case = transaction("Earned", 25).copy(description = "Verification case resolved", relatedCaseId = 1)
+        val demo = transaction("Earned", 40).copy(description = "Final demonstration reviewed", relatedDemonstrationId = 4)
+        val other = transaction("Earned", 10).copy(description = "Anything")
+        val badge = transaction("Redeemed", 200).copy(description = "Redeemed: Badge", redemptionItem = "Badge")
+        val unknown = transaction("Redeemed", 99).copy(description = "Redeemed: New", redemptionItem = "NewItem")
+
+        assertEquals("Caso #1 resuelto", case.title())
+        assertEquals("Demostración final revisada", demo.title())
+        assertEquals("SkillCredits ganados", other.title())
+        assertEquals("Canje: Insignia", badge.title())
+        assertEquals("Canje de SkillCredits", unknown.title())
+    }
+
+    @Test
+    fun demonstration_id_parses_from_backend_json() {
+        val raw = """{"id":8,"walletId":3,"amount":40,"type":"Earned","relatedDemonstrationId":4}"""
+        val parsed = Gson().fromJson(raw, CreditTransaction::class.java)
+        assertEquals(4, parsed.relatedDemonstrationId)
+    }
+
+    @Test
     fun wallet_and_transactions_parse_from_backend_json() {
         val wallet = Gson().fromJson("""{"id":3,"walletOwnerId":9,"balance":65}""", Wallet::class.java)
         assertEquals(65, wallet.balance)
