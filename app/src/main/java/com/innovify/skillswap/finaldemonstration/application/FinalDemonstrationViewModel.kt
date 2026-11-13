@@ -8,6 +8,7 @@ import com.innovify.skillswap.finaldemonstration.domain.MAX_VIDEO_BYTES
 import com.innovify.skillswap.finaldemonstration.domain.RescheduleDemonstrationRequest
 import com.innovify.skillswap.finaldemonstration.domain.ScheduleDemonstrationRequest
 import com.innovify.skillswap.finaldemonstration.infrastructure.finalDemonstrationApi
+import com.innovify.skillswap.iam.infrastructure.iamApi
 import com.innovify.skillswap.learningpath.application.LearningPathViewModel
 import com.innovify.skillswap.shared.application.SessionAwareViewModel
 import com.innovify.skillswap.shared.application.SessionStore
@@ -31,6 +32,18 @@ class FinalDemonstrationViewModel(
 
     // id que llega en el push (FinalDemonstrationApproved o Rejected); la pantalla lo usa una vez
     var selectedDemonstrationId: Int? = null
+
+    // Public username of the assigned Verificador (null until it loads or if it cannot be read)
+    var verifierUsername: String? by mutableStateOf(null)
+
+    // Reads the public profile of the Verificador; a failure only leaves the generic "Asignado" label
+    suspend fun loadVerifierUsername(verifierUserId: Int) {
+        verifierUsername = try {
+            iamApi.getPublicUser(verifierUserId).body()?.username
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     // Carga las demostraciones del Estudiante y se queda con la del push o, si no, la de la ruta actual
     suspend fun loadDemonstration(): Boolean {
