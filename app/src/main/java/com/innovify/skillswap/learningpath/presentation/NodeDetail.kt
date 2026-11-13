@@ -38,6 +38,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.innovify.skillswap.assessment.application.QuizViewModel
 import com.innovify.skillswap.assessment.application.VerificationCaseViewModel
+import com.innovify.skillswap.assessment.domain.latestReevaluationFor
+import com.innovify.skillswap.assessment.presentation.ReevaluationNotice
 import com.innovify.skillswap.credentialverification.application.CertificateViewModel
 import com.innovify.skillswap.credentialverification.presentation.CERTIFICATE_SOURCE_CAMERA
 import com.innovify.skillswap.credentialverification.presentation.CERTIFICATE_SOURCE_FILE
@@ -87,6 +89,14 @@ fun NodeDetail(
         val nodeId = node?.id ?: return@LaunchedEffect
         viewModel.viewModelScope.launch(Dispatchers.IO) {
             certificateViewModel.loadLocalCertificate(context, nodeId)
+        }
+    }
+
+    // Reevaluaciones ordenadas por un Verificador senior: explican por qué el nodo volvió a "Disponible"
+    LaunchedEffect(node?.id) {
+        if (node == null) return@LaunchedEffect
+        viewModel.viewModelScope.launch(Dispatchers.IO) {
+            verificationCaseViewModel.loadReevaluations()
         }
     }
 
@@ -162,6 +172,13 @@ fun NodeDetail(
             color = TextSecondary,
             modifier = Modifier.padding(top = 4.dp)
         )
+
+        // Un Verificador senior ordenó reevaluar el nodo: se le dice al Estudiante por qué se reabrió
+        if (node.status != "Completed") {
+            latestReevaluationFor(node.id, verificationCaseViewModel.reevaluations)?.let {
+                ReevaluationNotice(it, modifier = Modifier.padding(top = 16.dp))
+            }
+        }
 
         // Cómo completar este nodo: los pasos se marcan según el avance real
         val certificateDone = node.linkedCertificateId != null || node.completedByCertificate
