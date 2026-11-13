@@ -30,7 +30,7 @@ object CertificateParser {
 
     private val ORG_WORDS = listOf(
         "university", "universidad", "universidade", "institute", "instituto", "college",
-        "school", "academy", "academia", "coursera", "udemy", "edx", "platzi", "linkedin",
+        "school", "academy", "academia", "coursera", "udemy", "edx", "platzi", "datacamp", "linkedin",
         "google", "ibm", "microsoft", "oracle", "amazon", "cisco"
     )
 

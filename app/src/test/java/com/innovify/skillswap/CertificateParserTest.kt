@@ -93,6 +93,24 @@ class CertificateParserTest {
     }
 
     @Test
+    fun readsDataCampAsTheInstitution() {
+        val text = """
+            DataCamp
+            Statement of Accomplishment
+            Estudiante Prueba
+            has successfully completed
+            Data Analysis and Business Intelligence
+            Issued: November 2, 2026
+        """.trimIndent()
+
+        val parsed = CertificateParser.parse(text)
+
+        assertEquals("DataCamp", parsed.institution)
+        assertEquals("Data Analysis and Business Intelligence", parsed.course)
+        assertEquals("2026-11-02", parsed.issueDate)
+    }
+
+    @Test
     fun returnsEmptyFieldsWhenNothingMatches() {
         val parsed = CertificateParser.parse("texto cualquiera sin datos")
 

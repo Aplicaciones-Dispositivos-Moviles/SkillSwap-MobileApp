@@ -51,6 +51,8 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.innovify.skillswap.credentialverification.application.CertificateViewModel
+import com.innovify.skillswap.credentialverification.domain.CertificateField
+import com.innovify.skillswap.credentialverification.domain.CertificateForm
 import com.innovify.skillswap.credentialverification.domain.CertificateMismatch
 import com.innovify.skillswap.credentialverification.domain.CertificateParser
 import com.innovify.skillswap.credentialverification.infrastructure.CertificateOcr
@@ -116,6 +118,8 @@ fun CertificateCapture(
     var uploaded by remember { mutableStateOf(false) }
     var uploadFailed by remember { mutableStateOf(false) }
     var linked by remember { mutableStateOf<Boolean?>(null) }
+    // Fields marked in red after a send with missing data (each one clears as soon as it is edited)
+    var missing by remember { mutableStateOf(emptySet<CertificateField>()) }
 
     // Lee el texto del archivo elegido (foto, imagen o PDF) y rellena los campos editables.
     fun loadEvidence(uri: Uri) {
@@ -125,6 +129,7 @@ fun CertificateCapture(
         uploadFailed = false
         linked = null
         ocrFailed = false
+        missing = emptySet()
         viewModel.certificateMismatch = null
         reading = true
         // OCR on-device (ML Kit). El callback llega en el hilo principal.
@@ -195,11 +200,9 @@ fun CertificateCapture(
 
     // ---------------- ENVÍO AL BACKEND ----------------
     fun send(uri: Uri) {
-        val validDate = Regex("\\d{4}-\\d{2}-\\d{2}").matches(issueDate.trim())
-        if (institution.isBlank() || course.isBlank() || !validDate) {
-            Toast.makeText(
-                context, "Completa institución, curso y fecha (AAAA-MM-DD)", Toast.LENGTH_SHORT
-            ).show()
+        missing = CertificateForm.missingFields(institution, course, issueDate)
+        if (missing.isNotEmpty()) {
+            Toast.makeText(context, "Completa los datos marcados en rojo", Toast.LENGTH_SHORT).show()
             return
         }
         sending = true
@@ -393,19 +396,29 @@ fun CertificateCapture(
                 value = institution,
                 label = { Text(text = "Institución") },
                 enabled = !sending,
+                isError = CertificateField.Institution in missing,
+                supportingText = fieldError(CertificateField.Institution, missing),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth(),
-                onValueChange = { institution = it }
+                onValueChange = {
+                    institution = it
+                    missing = missing - CertificateField.Institution
+                }
             )
             OutlinedTextField(
                 value = course,
                 label = { Text(text = "Curso") },
                 enabled = !sending,
+                isError = CertificateField.Course in missing,
+                supportingText = fieldError(CertificateField.Course, missing),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
-                onValueChange = { course = it }
+                onValueChange = {
+                    course = it
+                    missing = missing - CertificateField.Course
+                }
             )
             // La fecha se elige en un calendario (siempre queda como AAAA-MM-DD); el OCR la precarga si la leyó
             OutlinedTextField(
@@ -414,6 +427,8 @@ fun CertificateCapture(
                 singleLine = true,
                 readOnly = true,
                 enabled = !sending,
+                isError = CertificateField.IssueDate in missing,
+                supportingText = fieldError(CertificateField.IssueDate, missing),
                 shape = RoundedCornerShape(12.dp),
                 trailingIcon = {
                     IconButton(onClick = { showDatePicker = true }, enabled = !sending) {
@@ -541,6 +556,7 @@ fun CertificateCapture(
                 TextButton(onClick = {
                     state.selectedDateMillis?.let {
                         issueDate = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString()
+                        missing = missing - CertificateField.IssueDate
                     }
                     showDatePicker = false
                 }) {
@@ -634,3 +650,11 @@ private fun MismatchCard(
         )
     }
 }
+
+// Text under a form field that blocked the send; null keeps the field without a supporting line.
+private fun fieldError(field: CertificateField, missing: Set<CertificateField>): (@Composable () -> Unit)? =
+    if (field in missing) {
+        { Text(text = CertificateForm.messageFor(field)) }
+    } else {
+        null
+    }
