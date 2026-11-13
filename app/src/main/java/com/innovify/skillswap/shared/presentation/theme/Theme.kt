@@ -1,0 +1,71 @@
+package com.innovify.skillswap.shared.presentation.theme
+
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.innovify.skillswap.shared.presentation.theme.AiContainer
+import com.innovify.skillswap.shared.presentation.theme.AiViolet
+import com.innovify.skillswap.shared.presentation.theme.Error
+import com.innovify.skillswap.shared.presentation.theme.ErrorContainer
+import com.innovify.skillswap.shared.presentation.theme.NeutralBorder
+import com.innovify.skillswap.shared.presentation.theme.NeutralSurface
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
+import com.innovify.skillswap.shared.presentation.theme.SkillBlueContainer
+import com.innovify.skillswap.shared.presentation.theme.SkillBlueDark
+import com.innovify.skillswap.shared.presentation.theme.TextPrimary
+import com.innovify.skillswap.shared.presentation.theme.TextSecondary
+import com.innovify.skillswap.shared.presentation.theme.Typography
+
+private val LightColorScheme = lightColorScheme(
+    primary = SkillBlue,
+    onPrimary = Color.White,
+    primaryContainer = SkillBlueContainer,
+    onPrimaryContainer = SkillBlueDark,
+    secondary = SkillBlueDark,
+    onSecondary = Color.White,
+    secondaryContainer = SkillBlueContainer,
+    onSecondaryContainer = SkillBlueDark,
+    tertiary = AiViolet,
+    onTertiary = Color.White,
+    tertiaryContainer = AiContainer,
+    onTertiaryContainer = AiViolet,
+    background = Color.White,
+    onBackground = TextPrimary,
+    surface = Color.White,
+    onSurface = TextPrimary,
+    surfaceVariant = NeutralSurface,
+    surfaceContainerLowest = Color.White,
+    surfaceContainerLow = Color.White,
+    surfaceContainer = NeutralSurface,
+    surfaceContainerHigh = NeutralSurface,
+    surfaceContainerHighest = NeutralSurface,
+    onSurfaceVariant = TextSecondary,
+    outline = NeutralBorder,
+    outlineVariant = NeutralBorder,
+    error = Error,
+    onError = Color.White,
+    errorContainer = ErrorContainer,
+    onErrorContainer = Error
+)
+
+// Radios del Design System: 8 chips, 12 inputs, 16 cards (los botones usan forma de píldora, ~26)
+private val SkillShapes = Shapes(
+    small = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+    extraSmall = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+    medium = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+    large = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+    extraLarge = androidx.compose.foundation.shape.RoundedCornerShape(26.dp)
+)
+
+@Composable
+fun SkillSwapTheme(content: @Composable () -> Unit) {
+    MaterialTheme(
+        colorScheme = LightColorScheme,
+        typography = Typography,
+        shapes = SkillShapes,
+        content = content
+    )
+}

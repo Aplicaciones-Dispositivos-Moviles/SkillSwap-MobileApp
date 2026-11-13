@@ -1,0 +1,22 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+.kotlin/
+*.apk
+
+# Configuración de Firebase del proyecto skillswap-moviles (se comparte por chat, no por Git)
+app/google-services.json
+.idea/
