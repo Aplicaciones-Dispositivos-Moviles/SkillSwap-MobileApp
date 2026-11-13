@@ -14,12 +14,13 @@ import androidx.core.content.ContextCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
-import com.innovify.skillswap.model.beans.AuthUser
-import com.innovify.skillswap.model.beans.DeviceTokenRequest
-import com.innovify.skillswap.model.client.RetrofitClient
+import com.innovify.skillswap.iam.domain.AuthUser
+import com.innovify.skillswap.iam.domain.DeviceTokenRequest
+import com.innovify.skillswap.shared.infrastructure.network.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.innovify.skillswap.iam.infrastructure.iamApi
 
 const val NOTIFICATION_CHANNEL_ID = "skillswap_updates"
 
@@ -49,7 +50,7 @@ class SkillSwapMessagingService : FirebaseMessagingService() {
         RetrofitClient.token = saved.token
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                RetrofitClient.webService.registerDeviceToken(DeviceTokenRequest(token))
+                iamApi.registerDeviceToken(DeviceTokenRequest(token))
             } catch (e: Exception) {
                 // sin red: se reenvía al abrir la app
             }

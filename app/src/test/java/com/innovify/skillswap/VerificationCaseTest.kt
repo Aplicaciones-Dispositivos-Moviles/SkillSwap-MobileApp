@@ -1,9 +1,9 @@
 package com.innovify.skillswap
 
 import com.google.gson.Gson
-import com.innovify.skillswap.model.beans.MiniProjectSubmission
-import com.innovify.skillswap.model.beans.VerificationCase
-import com.innovify.skillswap.model.beans.VerificationCaseDetail
+import com.innovify.skillswap.assessment.domain.MiniProjectSubmission
+import com.innovify.skillswap.assessment.domain.VerificationCase
+import com.innovify.skillswap.assessment.domain.VerificationCaseDetail
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

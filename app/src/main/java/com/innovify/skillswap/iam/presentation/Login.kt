@@ -1,0 +1,233 @@
+package com.innovify.skillswap.iam.presentation
+
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavHostController
+import com.innovify.skillswap.shared.presentation.theme.SkillBlue
+import com.innovify.skillswap.iam.infrastructure.BiometricVault
+import com.innovify.skillswap.iam.application.SessionViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import com.innovify.skillswap.iam.presentation.Register
+
+// Mock-up 03 · Inicio de sesión
+@Composable
+fun Login(viewModel: SessionViewModel, context: Context, nav: NavHostController) {
+
+    var username by remember { mutableStateOf(viewModel.registeredUsername) }
+    var password by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
+    var loading by remember { mutableStateOf(false) }
+    // US03: el botón de huella o rostro solo aparece si el teléfono lo soporta y el usuario lo activó
+    var biometricReady by remember {
+        mutableStateOf(BiometricVault.isAvailable(context) && BiometricVault.isEnabled(context))
+    }
+
+    fun signInWithBiometric() {
+        val activity = context as? FragmentActivity ?: return
+        BiometricVault.unlock(activity,
+            onSuccess = { savedUser, savedPassword ->
+                loading = true
+                // La red va en hilo IO (como en la plantilla del profe)
+                viewModel.viewModelScope.launch(Dispatchers.IO) {
+                    val ok = viewModel.signIn(savedUser, savedPassword, context)
+                    withContext(Dispatchers.Main) {
+                        loading = false
+                        if (ok) {
+                            nav.navigate("Path") { popUpTo("Login") { inclusive = true } }
+                        } else if (viewModel.credentialsRejected) {
+                            // La contraseña cambió: el acceso guardado ya no sirve
+                            BiometricVault.disable(context)
+                            biometricReady = false
+                            Toast.makeText(
+                                context,
+                                "Tu contraseña cambió. Entra con ella y vuelve a activar el acceso biométrico",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            Toast.makeText(context, viewModel.errorMessage, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            },
+            onError = { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+        )
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(top = 80.dp, bottom = 32.dp, start = 24.dp, end = 24.dp)
+    ) {
+        // Marca: el logo de SkillSwap (res/drawable-nodpi/skillswap_logo.png)
+        Image(
+            painter = painterResource(id = com.innovify.skillswap.R.drawable.skillswap_logo),
+            contentDescription = "SkillSwap",
+            modifier = Modifier.width(260.dp)
+        )
+        Text(
+            text = "Valida tus habilidades con evidencia real",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 12.dp, bottom = 32.dp)
+        )
+
+        Text(
+            text = "Inicia sesión",
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
+        )
+
+        Text(
+            text = "Usuario",
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        )
+        OutlinedTextField(
+            value = username,
+            singleLine = true,
+            leadingIcon = { Icon(imageVector = Icons.Filled.Person, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(),
+            onValueChange = { username = it }
+        )
+
+        Text(
+            text = "Contraseña",
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp, bottom = 8.dp)
+        )
+        OutlinedTextField(
+            value = password,
+            singleLine = true,
+            leadingIcon = { Icon(imageVector = Icons.Filled.Lock, contentDescription = null) },
+            trailingIcon = {
+                TextButton(onClick = { showPassword = !showPassword }) {
+                    Text(text = if (showPassword) "Ocultar" else "Ver")
+                }
+            },
+            visualTransformation = if (showPassword) VisualTransformation.None
+            else PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
+            onValueChange = { password = it }
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+        Button(
+            enabled = !loading,
+            onClick = {
+                if (username.isBlank() || password.isBlank()) {
+                    Toast.makeText(context, "Ingrese usuario y contraseña", Toast.LENGTH_SHORT).show()
+                } else {
+                    loading = true
+                    // La red va en hilo IO (como en la plantilla del profe)
+                    viewModel.viewModelScope.launch(Dispatchers.IO) {
+                        val ok = viewModel.signIn(username.trim(), password, context)
+                        // Toast y navegación necesitan el hilo principal
+                        withContext(Dispatchers.Main) {
+                            loading = false
+                            if (ok) {
+                                nav.navigate("Path") {
+                                    popUpTo("Login") { inclusive = true }
+                                }
+                            } else {
+                                Toast.makeText(context, viewModel.errorMessage, Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+        ) {
+            Text(
+                text = if (loading) "Ingresando…" else "Iniciar sesión",
+                style = MaterialTheme.typography.labelLarge
+            )
+        }
+        if (biometricReady) {
+            OutlinedButton(
+                enabled = !loading,
+                onClick = { signInWithBiometric() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp)
+                    .height(52.dp)
+            ) {
+                Text(
+                    text = "Entrar con huella o rostro",
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+            Text(
+                text = "Cuenta: ${BiometricVault.savedUsername(context) ?: ""}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+        if (loading) {
+            Text(
+                text = "Puede tardar si el servidor estaba dormido",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 12.dp)
+            )
+        }
+        TextButton(
+            enabled = !loading,
+            onClick = { nav.navigate("Register") },
+            modifier = Modifier.padding(top = 16.dp)
+        ) {
+            Text(text = "¿No tienes cuenta? Crear cuenta", style = MaterialTheme.typography.labelLarge)
+        }
+    }
+
+}

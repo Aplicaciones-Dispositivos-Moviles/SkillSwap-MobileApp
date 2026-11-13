@@ -1,8 +1,8 @@
 package com.innovify.skillswap
 
 import com.google.gson.Gson
-import com.innovify.skillswap.model.beans.CreditTransaction
-import com.innovify.skillswap.model.beans.Wallet
+import com.innovify.skillswap.reputation.domain.CreditTransaction
+import com.innovify.skillswap.reputation.domain.Wallet
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
