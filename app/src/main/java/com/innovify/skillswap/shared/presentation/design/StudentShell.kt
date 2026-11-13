@@ -1,8 +1,15 @@
 package com.innovify.skillswap.shared.presentation.design
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 
 /** Navigation route of each top-level tab. "Path" is the home tab and the root of the back stack. */
@@ -28,7 +35,9 @@ fun NavHostController.openTab(tab: StudentTab) {
 
 /**
  * Frame of the four top-level screens: Figma background and the bottom navigation. [content] receives the
- * padding of the system bars and the bottom bar so nothing is hidden behind them.
+ * padding of the system bars and the bottom bar so nothing is hidden behind them. The app draws edge to edge,
+ * so a strip of the screen background covers the status bar: scrolled content passes under it instead of
+ * showing behind the clock and the icons.
  */
 @Composable
 fun StudentTabScaffold(
@@ -40,7 +49,16 @@ fun StudentTabScaffold(
     Scaffold(
         containerColor = ScreenBackground,
         bottomBar = { StudentBottomBar(selected = selected, onSelect = { nav.openTab(it) }) },
-        floatingActionButton = floatingActionButton,
-        content = content
-    )
+        floatingActionButton = floatingActionButton
+    ) { inner ->
+        Box {
+            content(inner)
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .windowInsetsTopHeight(WindowInsets.statusBars)
+                    .background(ScreenBackground)
+            )
+        }
+    }
 }
